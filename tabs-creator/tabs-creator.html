@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Tab - Z Tabs</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="top-bar">
+    <h1>Z Tabs</h1>
+  </nav>
+
+  <main>
+    <h1 class="home-title">Create New Tab</h1>
+    <form id="tabForm">
+      <input type="text" id="tabTitle" placeholder="Tab Title" required><br><br>
+      <input type="text" id="capo" placeholder="Capo"><br><br>
+      <input type="text" id="tuning" placeholder="Tuning"><br><br>
+      <textarea id="chords" placeholder="Chords"></textarea><br><br>
+      <textarea id="lyrics" placeholder="Lyrics / Tabs"></textarea><br><br>
+      <button type="submit">Create Tab</button>
+    </form>
+  </main>
+
+  <script>
+    const form = document.getElementById('tabForm');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const tab = {
+        title: document.getElementById('tabTitle').value,
+        capo: document.getElementById('capo').value,
+        tuning: document.getElementById('tuning').value,
+        chords: document.getElementById('chords').value,
+        lyrics: document.getElementById('lyrics').value
+      };
+
+      let savedTabs = JSON.parse(localStorage.getItem('guitarTabs') || '[]');
+      savedTabs.push(tab);
+      localStorage.setItem('guitarTabs', JSON.stringify(savedTabs));
+
+      alert('Tab created!');
+      window.location.href = 'tabs.html';
+    });
+  </script>
+</body>
+</html>
