@@ -1,20 +1,18 @@
-<link rel="stylesheet" href="style.css">
-
-/* Cool Font + Orange Background */
+/* --- Fonts & Background --- */
 body {
-  font-family: 'Menlo', cursive;
+  font-family: 'Pacifico', cursive;
   margin: 0;
   padding: 0;
-  background-color: #FFA500; /* solid orange */
-  color: orange;
+  background-color: #FFA500;
+  color: white;
 }
 
-/* Top Menu Strip */
+/* --- Top Bar / Menu --- */
 .top-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #ff7f00; /* darker orange strip */
+  background-color: #ff7f00;
   padding: 15px 30px;
   position: relative;
 }
@@ -24,7 +22,7 @@ body {
   font-size: 2.5rem;
 }
 
-/* Menu Button and Dropdown */
+/* --- Dropdown Menu --- */
 .menu-container {
   position: relative;
 }
@@ -39,9 +37,7 @@ body {
   font-size: 1.2rem;
 }
 
-.menu-btn:hover {
-  background-color: #e67300;
-}
+.menu-btn:hover { background-color: #e67300; }
 
 .dropdown {
   display: none;
@@ -51,8 +47,8 @@ body {
   background-color: #ff7f00;
   min-width: 150px;
   border-radius: 5px;
-  z-index: 1;
   flex-direction: column;
+  z-index: 1;
 }
 
 .dropdown a {
@@ -63,29 +59,16 @@ body {
   font-family: 'Pacifico', cursive;
 }
 
-.dropdown a:hover {
-  background-color: #e67300;
-}
+.dropdown a:hover { background-color: #e67300; }
 
-/* Home Page Big Title */
-.home-main {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: calc(100vh - 70px); /* full page minus top bar */
-}
-
-.home-title {
-  font-size: 6rem;
-  text-align: center;
-  margin: 0;
-}
-
-/* Tabs & Playlists Pages Main */
+/* --- Main Page --- */
 main {
-  padding: 2rem;
+  padding: 20px;
+  max-width: 900px;
+  margin: 50px auto;
 }
 
+/* --- Buttons --- */
 button {
   padding: 10px 20px;
   border-radius: 8px;
@@ -95,16 +78,45 @@ button {
   font-family: 'Pacifico', cursive;
   font-size: 1.2rem;
   cursor: pointer;
-  margin: 5px;
+  margin: 5px 0;
 }
 
-button:hover {
-  background-color: #e67300;
-}
+button:hover { background-color: #e67300; }
 
+/* --- Tab / Playlist Buttons --- */
 #tabsContainer button,
 #playlistsContainer button {
   display: block;
-  width: 200px;
+  width: 100%;
+  text-align: left;
   margin: 10px 0;
+}
+
+/* --- Tab Display Page --- */
+.tab-display {
+  background: rgba(0,0,0,0.2);
+  padding: 15px;
+  margin: 15px 0;
+  border-radius: 8px;
+}
+
+.tab-display h2 {
+  font-family: 'Pacifico', cursive;
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.tab-display pre {
+  font-family: 'Courier New', monospace;
+  background: rgba(255,255,255,0.1);
+  padding: 10px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+/* --- Responsive --- */
+@media screen and (max-width: 600px) {
+  .top-bar { flex-direction: column; align-items: flex-start; }
+  .menu-btn { margin-top: 10px; }
 }
