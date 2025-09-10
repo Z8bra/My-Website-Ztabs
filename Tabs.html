@@ -23,19 +23,54 @@
 
   <main>
     <h1 class="home-title">Tabs</h1>
-    <button onclick="addTabButton()">Add Tab</button>
+    <button onclick="window.location.href='tab_creator.html'">Add Tab</button>
     <div id="tabsContainer"></div>
   </main>
 
   <script>
-    function addTabButton() {
-      const name = prompt("Enter tab name:");
-      if(!name) return;
-      const btn = document.createElement("button");
-      btn.textContent = name;
-      btn.onclick = () => alert("Tab page blank for now");
-      document.getElementById("tabsContainer").appendChild(btn);
+    const tabsContainer = document.getElementById('tabsContainer');
+    const savedTabs = JSON.parse(localStorage.getItem('guitarTabs') || '[]');
+
+    function renderTabs() {
+      tabsContainer.innerHTML = '';
+      savedTabs.forEach((tab, index) => {
+        const btn = document.createElement('button');
+        btn.textContent = tab.title;
+        btn.onclick = () => viewTab(index);
+        tabsContainer.appendChild(btn);
+      });
     }
+
+    function viewTab(index) {
+      const tab = savedTabs[index];
+      const tabWindow = window.open('', '_blank', 'width=700,height=700');
+      tabWindow.document.write(`
+        <html>
+          <head>
+            <title>${tab.title}</title>
+            <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+            <style>
+              body { font-family: 'Pacifico', cursive; background: #FFA500; color: white; padding: 20px; }
+              h1 { text-align: center; font-size: 3rem; }
+              .tab-display { background: rgba(0,0,0,0.2); padding: 15px; margin: 15px 0; border-radius: 8px; }
+              pre { font-family: 'Courier New', monospace; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 6px; white-space: pre-wrap; }
+            </style>
+          </head>
+          <body>
+            <h1>${tab.title}</h1>
+            <div class="tab-display">
+              <p><strong>Capo:</strong> ${tab.capo}</p>
+              <p><strong>Tuning:</strong> ${tab.tuning}</p>
+              <p><strong>Chords:</strong> ${tab.chords}</p>
+              <p><strong>Lyrics / Tabs:</strong></p>
+              <pre>${tab.lyrics}</pre>
+            </div>
+          </body>
+        </html>
+      `);
+    }
+
+    renderTabs();
   </script>
   <script src="script.js"></script>
 </body>
