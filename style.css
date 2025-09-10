@@ -3,7 +3,7 @@ body {
   font-family: 'menlo', cursive;
   margin: 0;
   padding: 0;
-  background-color: #FFA500;
+  background-color: #FFA500; /* solid orange */
   color: orange;
 }
 
