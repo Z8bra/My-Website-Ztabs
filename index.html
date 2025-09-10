@@ -3,32 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My First Website</title>
+  <title>Z Tabs</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header>
-    <h1>Hello, World! 🌍</h1>
-    <p>Welcome to my first coded website.</p>
+    <h1>Z Tabs</h1>
+    <p>Welcome to Z Tabs – organize your tabs easily!</p>
   </header>
 
   <main>
     <section>
-      <h2>About Me</h2>
-      <p>I’m learning to build websites with code!</p>
-    </section>
-
-    <section>
-      <h2>Cool Button</h2>
-      <button onclick="sayHi()">Click me</button>
+      <h2>My Tabs</h2>
+      <ul id="tabList">
+        <li>Example Tab 1</li>
+        <li>Example Tab 2</li>
+      </ul>
+      <input type="text" id="newTabInput" placeholder="New tab name">
+      <button onclick="addTab()">Add Tab</button>
     </section>
   </main>
 
   <footer>
-    <p>© 2025 My Website</p>
+    <p>© 2025 Z Tabs</p>
   </footer>
 
   <script src="script.js"></script>
 </body>
 </html>
-
