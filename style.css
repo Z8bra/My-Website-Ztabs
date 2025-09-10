@@ -1,10 +1,10 @@
 /* --- Fonts & Background --- */
 body {
-  font-family: 'Pacifico', cursive;
+  font-family: 'menlo', cursive;
   margin: 0;
   padding: 0;
   background-color: #FFA500;
-  color: white;
+  color: orange;
 }
 
 /* --- Top Bar / Menu --- */
