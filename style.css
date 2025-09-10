@@ -1,53 +1,106 @@
+/* Font */
 body {
-  font-family: Arial, sans-serif;
+  font-family: 'Pacifico', cursive;
   margin: 0;
   padding: 0;
-  background: #f0f4f8;
+  background: linear-gradient(135deg, #FFA500, #FF7F50);
   color: #333;
 }
 
-header {
-  background: #1f8ef1;
+/* Top Navigation Bar */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ff6f00;
+  padding: 15px 30px;
   color: white;
-  text-align: center;
-  padding: 2rem;
 }
 
+.top-bar h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.menu {
+  list-style: none;
+  display: flex;
+  margin: 0;
+  padding: 0;
+}
+
+.menu li {
+  margin-left: 20px;
+}
+
+.menu li a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.menu li a:hover {
+  text-decoration: underline;
+}
+
+/* Main Section */
 main {
   padding: 2rem;
-  max-width: 600px;
-  margin: auto;
+  max-width: 700px;
+  margin: 50px auto;
+  background: rgba(255,255,255,0.9);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
 
+/* Sections */
 section {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  display: block;
 }
 
+.hidden-section {
+  display: none;
+}
+
+.active-section {
+  display: block;
+}
+
+/* Search bars */
 input[type="text"] {
   padding: 10px;
   width: 70%;
   margin-right: 10px;
+  margin-bottom: 10px;
   border-radius: 6px;
   border: 1px solid #ccc;
 }
 
+/* Buttons */
 button {
   padding: 10px 14px;
   border-radius: 6px;
   border: none;
-  background: #1f8ef1;
+  background-color: #ff6f00;
   color: white;
   cursor: pointer;
+  font-weight: bold;
 }
 
 button:hover {
-  background: #1366d6;
+  background-color: #e65c00;
 }
 
+/* Lists */
 ul {
   list-style: disc inside;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  margin-top: 50px;
+  color: white;
+  font-weight: bold;
 }
