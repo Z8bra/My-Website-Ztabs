@@ -1,10 +1,10 @@
 /* --- Fonts & Background --- */
 body {
-  font-family: 'menlo', cursive;
+  font-family: 'Pacifico', cursive;
   margin: 0;
   padding: 0;
-  background-color: #FFA500; /* solid orange */
-  color: orange;
+  background-color: #FFA500 !important; /* solid orange background */
+  color: white;
 }
 
 /* --- Top Bar / Menu --- */
@@ -61,7 +61,7 @@ body {
 
 .dropdown a:hover { background-color: #e67300; }
 
-/* --- Main Page --- */
+/* --- Main Content --- */
 main {
   padding: 20px;
   max-width: 900px;
@@ -115,8 +115,16 @@ button:hover { background-color: #e67300; }
   overflow-x: auto;
 }
 
+/* --- Home Page Title --- */
+.home-title {
+  text-align: center;
+  font-size: 5rem;
+  margin-top: 50px;
+}
+
 /* --- Responsive --- */
 @media screen and (max-width: 600px) {
   .top-bar { flex-direction: column; align-items: flex-start; }
   .menu-btn { margin-top: 10px; }
+  .home-title { font-size: 4rem; }
 }
