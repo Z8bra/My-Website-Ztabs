@@ -23,19 +23,37 @@
 
   <main>
     <h1 class="home-title">Playlists</h1>
-    <button onclick="addPlaylistButton()">Add Playlist</button>
+    <button onclick="createPlaylist()">Add Playlist</button>
     <div id="playlistsContainer"></div>
   </main>
 
   <script>
-    function addPlaylistButton() {
+    const playlistsContainer = document.getElementById('playlistsContainer');
+    let playlists = JSON.parse(localStorage.getItem('playlists') || '[]');
+
+    function renderPlaylists() {
+      playlistsContainer.innerHTML = '';
+      playlists.forEach((pl, i) => {
+        const btn = document.createElement('button');
+        btn.textContent = pl.name;
+        btn.onclick = () => viewPlaylist(i);
+        playlistsContainer.appendChild(btn);
+      });
+    }
+
+    function createPlaylist() {
       const name = prompt("Enter playlist name:");
       if(!name) return;
-      const btn = document.createElement("button");
-      btn.textContent = name;
-      btn.onclick = () => alert("Playlist page blank for now");
-      document.getElementById("playlistsContainer").appendChild(btn);
+      playlists.push({name, tabs: []});
+      localStorage.setItem('playlists', JSON.stringify(playlists));
+      renderPlaylists();
     }
+
+    function viewPlaylist(index) {
+      alert(`Playlist "${playlists[index].name}" is blank for now`);
+    }
+
+    renderPlaylists();
   </script>
   <script src="script.js"></script>
 </body>
