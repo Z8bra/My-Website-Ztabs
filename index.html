@@ -5,22 +5,41 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Z Tabs</title>
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
 </head>
 <body>
-  <header>
+  <!-- Top Navigation Bar / Menu -->
+  <nav class="top-bar">
     <h1>Z Tabs</h1>
-    <p>Welcome to Z Tabs – organize your tabs easily!</p>
-  </header>
+    <ul class="menu">
+      <li><a href="#" onclick="showSection('tabs')">Tabs</a></li>
+      <li><a href="#" onclick="showSection('playlists')">Playlists</a></li>
+    </ul>
+  </nav>
 
   <main>
-    <section>
-      <h2>My Tabs</h2>
+    <!-- Tabs Section -->
+    <section id="tabs" class="active-section">
+      <h2>Tabs</h2>
+      <input type="text" id="searchTabs" placeholder="Search tabs..." onkeyup="searchTabs()">
       <ul id="tabList">
         <li>Example Tab 1</li>
         <li>Example Tab 2</li>
       </ul>
       <input type="text" id="newTabInput" placeholder="New tab name">
       <button onclick="addTab()">Add Tab</button>
+    </section>
+
+    <!-- Playlists Section -->
+    <section id="playlists" class="hidden-section">
+      <h2>Playlists</h2>
+      <input type="text" id="searchPlaylists" placeholder="Search playlists..." onkeyup="searchPlaylists()">
+      <ul id="playlistList">
+        <li>Example Playlist 1</li>
+        <li>Example Playlist 2</li>
+      </ul>
+      <input type="text" id="newPlaylistInput" placeholder="New playlist name">
+      <button onclick="addPlaylist()">Add Playlist</button>
     </section>
   </main>
 
@@ -29,5 +48,8 @@
   </footer>
 
   <script src="script.js"></script>
+</body>
+</html>
+
 </body>
 </html>
