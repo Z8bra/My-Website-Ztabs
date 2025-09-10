@@ -1,51 +1,108 @@
-// ----- Section Toggle -----
-function showSection(sectionId) {
-  document.getElementById('tabs').classList.add('hidden-section');
-  document.getElementById('playlists').classList.add('hidden-section');
-  document.getElementById(sectionId).classList.remove('hidden-section');
+/* Cool Font + Orange Background */
+body {
+  font-family: 'Pacifico', cursive;
+  margin: 0;
+  padding: 0;
+  background-color: #FFA500; /* solid orange */
+  color: white;
 }
 
-// ----- Tabs Functionality -----
-function addTab() {
-  const input = document.getElementById('newTabInput');
-  const name = input.value.trim();
-  if(name === "") return alert("Enter a tab name!");
-  
-  const ul = document.getElementById('tabList');
-  const li = document.createElement('li');
-  li.textContent = name;
-  ul.appendChild(li);
-  input.value = "";
+/* Top Menu Strip */
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #ff7f00; /* darker orange strip */
+  padding: 15px 30px;
+  position: relative;
 }
 
-function searchTabs() {
-  const filter = document.getElementById('searchTabs').value.toLowerCase();
-  const items = document.getElementById('tabList').getElementsByTagName('li');
-  for(let i=0; i<items.length; i++){
-    const txt = items[i].textContent.toLowerCase();
-    items[i].style.display = txt.includes(filter) ? "" : "none";
-  }
+.top-bar h1 {
+  margin: 0;
+  font-size: 2.5rem;
 }
 
-// ----- Playlists Functionality -----
-function addPlaylist() {
-  const input = document.getElementById('newPlaylistInput');
-  const name = input.value.trim();
-  if(name === "") return alert("Enter a playlist name!");
-  
-  const ul = document.getElementById('playlistList');
-  const li = document.createElement('li');
-  li.textContent = name;
-  ul.appendChild(li);
-  input.value = "";
+/* Menu Button and Dropdown */
+.menu-container {
+  position: relative;
 }
 
-function searchPlaylists() {
-  const filter = document.getElementById('searchPlaylists').value.toLowerCase();
-  const items = document.getElementById('playlistList').getElementsByTagName('li');
-  for(let i=0; i<items.length; i++){
-    const txt = items[i].textContent.toLowerCase();
-    items[i].style.display = txt.includes(filter) ? "" : "none";
-  }
+.menu-btn {
+  background-color: #ff7f00;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  font-family: 'Pacifico', cursive;
+  cursor: pointer;
+  font-size: 1.2rem;
 }
 
+.menu-btn:hover {
+  background-color: #e67300;
+}
+
+.dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #ff7f00;
+  min-width: 150px;
+  border-radius: 5px;
+  z-index: 1;
+  flex-direction: column;
+}
+
+.dropdown a {
+  display: block;
+  padding: 10px;
+  color: white;
+  text-decoration: none;
+  font-family: 'Pacifico', cursive;
+}
+
+.dropdown a:hover {
+  background-color: #e67300;
+}
+
+/* Home Page Big Title */
+.home-main {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 70px); /* full page minus top bar */
+}
+
+.home-title {
+  font-size: 6rem;
+  text-align: center;
+  margin: 0;
+}
+
+/* Tabs & Playlists Pages Main */
+main {
+  padding: 2rem;
+}
+
+button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  background-color: #ff7f00;
+  color: white;
+  font-family: 'Pacifico', cursive;
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin: 5px;
+}
+
+button:hover {
+  background-color: #e67300;
+}
+
+#tabsContainer button,
+#playlistsContainer button {
+  display: block;
+  width: 200px;
+  margin: 10px 0;
+}
