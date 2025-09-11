@@ -1,29 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tabs - Z Tabs</title>
-  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Roboto&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Z Tabs</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>Z Tabs</h1>
-    <div class="dropdown">
-      <button class="dropbtn">Menu ▼</button>
-      <div class="dropdown-content">
-        <a href="index.html">Home</a>
-        <a href="playlists.html">Playlists</a>
-        <a href="creator.html">Create Tab</a>
-      </div>
-    </div>
-  </header>
+<header>
+  <h1>Z Tabs</h1>
+  <p>Click a tab to view its content.</p>
+</header>
 
-  <main>
-    <h2>Tabs</h2>
-    <p>Your saved guitar tabs will appear here.</p>
-    <button class="btn" onclick="window.location.href='creator.html'">Add Tab</button>
-  </main>
+<section class="tabs-container">
+  <div id="tabs" class="tabs"></div>
+  <div id="content" class="tab-content"></div>
+</section>
+
+<footer><small>Made with ❤️ — Z Tabs</small></footer>
+<script src="script.js"></script>
 </body>
 </html>
+
