@@ -3,73 +3,82 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tabs - Z Tabs</title>
+  <title>Z Tabs - Tabs</title>
   <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0; font-family: 'Pacifico', cursive;
+      background-color: #ff9800; color: white;
+    }
+    header {
+      background-color: #e68900; padding: 15px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    header h1 { margin: 0; font-size: 32px; }
+    .dropdown { position: relative; display: inline-block; }
+    .dropbtn {
+      background-color: #cc7700; color: white;
+      font-family: 'Pacifico', cursive; padding: 10px 20px;
+      font-size: 20px; border: none; border-radius: 8px; cursor: pointer;
+    }
+    .dropdown-content {
+      display: none; position: absolute; background-color: #e68900;
+      min-width: 160px; border-radius: 8px;
+    }
+    .dropdown-content a {
+      color: white; padding: 12px 16px; text-decoration: none;
+      display: block; font-size: 18px;
+    }
+    .dropdown-content a:hover { background-color: #cc7700; }
+    .dropdown:hover .dropdown-content { display: block; }
+    main { padding: 20px; text-align: center; }
+    .tab-list button {
+      display: block; margin: 10px auto; padding: 10px 20px;
+      background-color: #e68900; border: none; border-radius: 6px;
+      font-family: 'Pacifico', cursive; font-size: 20px;
+      color: white; cursor: pointer;
+    }
+    .tab-list button:hover { background-color: #cc7700; }
+    .tab-item {
+      background: #e68900; margin: 10px auto; padding: 15px;
+      width: 80%; border-radius: 8px; text-align: left;
+    }
+  </style>
 </head>
 <body>
-  <nav class="top-bar">
+  <header>
     <h1>Z Tabs</h1>
-    <div class="menu-container">
-      <button class="menu-btn">Menu ▼</button>
-      <div class="dropdown" style="display:none;">
+    <div class="dropdown">
+      <button class="dropbtn">Menu ▼</button>
+      <div class="dropdown-content">
         <a href="index.html">Home</a>
+        <a href="tabs.html">Tabs</a>
         <a href="playlists.html">Playlists</a>
       </div>
     </div>
-  </nav>
+  </header>
 
   <main>
-    <h1 class="home-title">Tabs</h1>
-    <button onclick="window.location.href='tab_creator.html'">Add Tab</button>
-    <div id="tabsContainer"></div>
+    <h2>Tabs</h2>
+    <div class="tab-list" id="tabList"></div>
+    <button onclick="window.location.href='create-tab.html'">+ Add Tab</button>
   </main>
 
   <script>
-    const tabsContainer = document.getElementById('tabsContainer');
-    const savedTabs = JSON.parse(localStorage.getItem('guitarTabs') || '[]');
+    // Load tabs from localStorage
+    const tabList = document.getElementById("tabList");
+    const savedTabs = JSON.parse(localStorage.getItem("tabs")) || [];
 
-    function renderTabs() {
-      tabsContainer.innerHTML = '';
-      savedTabs.forEach((tab, index) => {
-        const btn = document.createElement('button');
-        btn.textContent = tab.title;
-        btn.onclick = () => viewTab(index);
-        tabsContainer.appendChild(btn);
-      });
-    }
-
-    function viewTab(index) {
-      const tab = savedTabs[index];
-      const tabWindow = window.open('', '_blank', 'width=700,height=700');
-      tabWindow.document.write(`
-        <html>
-          <head>
-            <title>${tab.title}</title>
-            <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
-            <style>
-              body { font-family: 'Pacifico', cursive; background: orange; color: white; padding: 20px; }
-              h1 { text-align: center; font-size: 3rem; }
-              .tab-display { background: rgba(0,0,0,0.2); padding: 15px; margin: 15px 0; border-radius: 8px; }
-              pre { font-family: 'Courier New', monospace; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 6px; white-space: pre-wrap; }
-            </style>
-          </head>
-          <body>
-            <h1>${tab.title}</h1>
-            <div class="tab-display">
-              <p><strong>Capo:</strong> ${tab.capo}</p>
-              <p><strong>Tuning:</strong> ${tab.tuning}</p>
-              <p><strong>Chords:</strong> ${tab.chords}</p>
-              <p><strong>Lyrics / Tabs:</strong></p>
-              <pre>${tab.lyrics}</pre>
-            </div>
-          </body>
-        </html>
-      `);
-    }
-
-    renderTabs();
+    savedTabs.forEach(tab => {
+      const div = document.createElement("div");
+      div.className = "tab-item";
+      div.innerHTML = `<h3>${tab.name}</h3>
+        <p><b>Capo:</b> ${tab.capo}</p>
+        <p><b>Tuning:</b> ${tab.tuning}</p>
+        <p><b>Chords:</b> ${tab.chords}</p>
+        <pre>${tab.lyrics}</pre>`;
+      tabList.appendChild(div);
+    });
   </script>
-  <script src="script.js"></script>
 </body>
 </html>
