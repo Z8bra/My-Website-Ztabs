@@ -3,46 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create Tab</title>
-  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <title>Create Tab - Z Tabs</title>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Roboto&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
   <style>
-    body { margin: 0; font-family: 'Pacifico', cursive;
-      background-color: #ff9800; color: white; }
-    header {
-      background-color: #e68900; padding: 15px;
-      display: flex; justify-content: space-between; align-items: center;
+    form {
+      max-width: 600px;
+      margin: auto;
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: left;
     }
-    header h1 { margin: 0; font-size: 32px; }
-    .dropdown { position: relative; display: inline-block; }
-    .dropbtn {
-      background-color: #cc7700; color: white;
-      font-family: 'Pacifico', cursive; padding: 10px 20px;
-      font-size: 20px; border: none; border-radius: 8px; cursor: pointer;
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: bold;
     }
-    .dropdown-content { display: none; position: absolute; background-color: #e68900;
-      min-width: 160px; border-radius: 8px; }
-    .dropdown-content a { color: white; padding: 12px 16px; text-decoration: none;
-      display: block; font-size: 18px; }
-    .dropdown-content a:hover { background-color: #cc7700; }
-    .dropdown:hover .dropdown-content { display: block; }
-    main { padding: 20px; text-align: center; }
-    input, textarea {
-      display: block; margin: 10px auto; padding: 8px;
-      border-radius: 6px; border: none; font-size: 16px;
-      width: 80%; max-width: 500px;
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
     }
-    button {
-      background-color: #cc7700; border: none;
-      padding: 10px 20px; font-size: 20px;
-      font-family: 'Pacifico', cursive; color: white;
-      border-radius: 8px; cursor: pointer;
-    }
-    button:hover { background-color: #b55f00; }
   </style>
 </head>
 <body>
   <header>
-    <h1>Create Tab</h1>
+    <h1>Z Tabs</h1>
     <div class="dropdown">
       <button class="dropbtn">Menu ▼</button>
       <div class="dropdown-content">
@@ -54,32 +44,25 @@
   </header>
 
   <main>
-    <h2>New Tab</h2>
-    <form id="tabForm">
-      <input type="text" id="name" placeholder="Song Name" required>
-      <input type="text" id="capo" placeholder="Capo (e.g. 2nd fret)">
-      <input type="text" id="tuning" placeholder="Tuning (e.g. EADGBE)">
-      <input type="text" id="chords" placeholder="Chords (e.g. Em G D A)">
-      <textarea id="lyrics" rows="6" placeholder="Lyrics / Tabs"></textarea>
-      <button type="submit">Create</button>
+    <h2>Create a New Tab</h2>
+    <form>
+      <label for="name">Song Name</label>
+      <input type="text" id="name" placeholder="Enter song name">
+
+      <label for="capo">Capo</label>
+      <input type="text" id="capo" placeholder="e.g. 2nd fret">
+
+      <label for="tuning">Tuning</label>
+      <input type="text" id="tuning" placeholder="e.g. Standard EADGBE">
+
+      <label for="chords">Chords</label>
+      <textarea id="chords" rows="4" placeholder="List chords here"></textarea>
+
+      <label for="lyrics">Lyrics</label>
+      <textarea id="lyrics" rows="6" placeholder="Write lyrics with chords above lines"></textarea>
+
+      <button class="btn" type="submit">Create</button>
     </form>
   </main>
-
-  <script>
-    document.getElementById("tabForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const tab = {
-        name: document.getElementById("name").value,
-        capo: document.getElementById("capo").value,
-        tuning: document.getElementById("tuning").value,
-        chords: document.getElementById("chords").value,
-        lyrics: document.getElementById("lyrics").value
-      };
-      const savedTabs = JSON.parse(localStorage.getItem("tabs")) || [];
-      savedTabs.push(tab);
-      localStorage.setItem("tabs", JSON.stringify(savedTabs));
-      window.location.href = "tabs.html";
-    });
-  </script>
 </body>
 </html>
