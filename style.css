@@ -1,20 +1,19 @@
-/* --- Fonts & Background --- */
-body {
-  font-family: 'Pacifico', cursive;
+html, body {
+  height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #FFA500 !important; /* solid orange background */
+  background-color: orange !important; /* force solid orange */
   color: white;
+  font-family: 'Pacifico', cursive;
 }
 
-/* --- Top Bar / Menu --- */
+/* Top bar */
 .top-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   background-color: #ff7f00;
   padding: 15px 30px;
-  position: relative;
 }
 
 .top-bar h1 {
@@ -22,109 +21,9 @@ body {
   font-size: 2.5rem;
 }
 
-/* --- Dropdown Menu --- */
-.menu-container {
-  position: relative;
-}
-
-.menu-btn {
-  background-color: #ff7f00;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  font-family: 'Pacifico', cursive;
-  cursor: pointer;
-  font-size: 1.2rem;
-}
-
-.menu-btn:hover { background-color: #e67300; }
-
-.dropdown {
-  display: none;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background-color: #ff7f00;
-  min-width: 150px;
-  border-radius: 5px;
-  flex-direction: column;
-  z-index: 1;
-}
-
-.dropdown a {
-  display: block;
-  padding: 10px;
-  color: white;
-  text-decoration: none;
-  font-family: 'Pacifico', cursive;
-}
-
-.dropdown a:hover { background-color: #e67300; }
-
-/* --- Main Content --- */
-main {
-  padding: 20px;
-  max-width: 900px;
-  margin: 50px auto;
-}
-
-/* --- Buttons --- */
-button {
-  padding: 10px 20px;
-  border-radius: 8px;
-  border: none;
-  background-color: #ff7f00;
-  color: white;
-  font-family: 'Pacifico', cursive;
-  font-size: 1.2rem;
-  cursor: pointer;
-  margin: 5px 0;
-}
-
-button:hover { background-color: #e67300; }
-
-/* --- Tab / Playlist Buttons --- */
-#tabsContainer button,
-#playlistsContainer button {
-  display: block;
-  width: 100%;
-  text-align: left;
-  margin: 10px 0;
-}
-
-/* --- Tab Display Page --- */
-.tab-display {
-  background: rgba(0,0,0,0.2);
-  padding: 15px;
-  margin: 15px 0;
-  border-radius: 8px;
-}
-
-.tab-display h2 {
-  font-family: 'Pacifico', cursive;
-  font-size: 2rem;
-  margin-bottom: 10px;
-}
-
-.tab-display pre {
-  font-family: 'Courier New', monospace;
-  background: rgba(255,255,255,0.1);
-  padding: 10px;
-  border-radius: 6px;
-  white-space: pre-wrap;
-  overflow-x: auto;
-}
-
-/* --- Home Page Title --- */
 .home-title {
   text-align: center;
   font-size: 5rem;
   margin-top: 50px;
 }
 
-/* --- Responsive --- */
-@media screen and (max-width: 600px) {
-  .top-bar { flex-direction: column; align-items: flex-start; }
-  .menu-btn { margin-top: 10px; }
-  .home-title { font-size: 4rem; }
-}
