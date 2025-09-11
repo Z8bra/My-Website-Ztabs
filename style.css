@@ -1,29 +1,113 @@
-html, body {
-  height: 100%;
+:root {
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --accent: #f97316; /* bright orange */
+  --muted: #6b7280;
+  --text: #111827;
+}
+
+* { box-sizing: border-box; }
+
+body {
   margin: 0;
-  padding: 0;
-  background-color: orange !important; /* force solid orange */
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  padding: 20px;
+}
+
+.app {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+header h1 {
+  margin: 0 0 6px;
+  font-size: 28px;
+  color: var(--accent);
+}
+
+header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.controls {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  background: var(--card);
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+}
+
+.controls input, .controls textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 6px;
+  border: 1px solid #e6e9ef;
+  font-family: inherit;
+}
+
+.controls button {
+  background: var(--accent);
   color: white;
-  font-family: 'Pacifico', cursive;
+  border: none;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
 }
 
-/* Top bar */
-.top-bar {
+.controls button:active {
+  transform: translateY(1px);
+}
+
+.z-tabs-container {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #ff7f00;
-  padding: 15px 30px;
+  margin-top: 20px;
+  gap: 12px;
 }
 
-.top-bar h1 {
-  margin: 0;
-  font-size: 2.5rem;
+/* Tabs */
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 220px;
 }
 
-.home-title {
-  text-align: center;
-  font-size: 5rem;
-  margin-top: 50px;
+.tab-btn {
+  padding: 10px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  text-align: left;
 }
 
+.tab-btn.active {
+  background: #fbbf24;
+  color: #111;
+}
+
+/* Content */
+.tab-content {
+  flex-grow: 1;
+  padding: 20px;
+  background: var(--card);
+  border-radius: 10px;
+  min-height: 400px;
+  box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+  overflow-y: auto;
+}
+
+footer {
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 13px;
+}
