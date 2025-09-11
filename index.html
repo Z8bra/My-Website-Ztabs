@@ -1,32 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Z Tabs</title>
-  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Roboto&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Z Tabs</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Top bar -->
+<div class="app">
   <header>
     <h1>Z Tabs</h1>
-    <div class="dropdown">
-      <button class="dropbtn">Menu ▼</button>
-      <div class="dropdown-content">
-        <a href="tabs.html">Tabs</a>
-        <a href="playlists.html">Playlists</a>
-        <a href="creator.html">Create Tab</a>
-      </div>
-    </div>
+    <p>Create and explore your song tabs below.</p>
   </header>
 
-  <!-- Page content -->
-  <main>
-    <h2>Welcome to Z Tabs!</h2>
-    <p>Choose an option from the menu above.</p>
-    <button class="btn" onclick="window.location.href='tabs.html'">Go to Tabs</button>
-  </main>
+  <section class="controls">
+    <label>Song Title
+      <input id="songTitle" placeholder="Enter song title">
+    </label>
+    <label>Song Content
+      <textarea id="songContent" placeholder="Enter content for this song"></textarea>
+    </label>
+    <button id="addTabBtn">Add Tab</button>
+  </section>
+
+  <section class="z-tabs-container">
+    <div id="tabs" class="tabs">
+      <!-- Tabs will appear here -->
+    </div>
+    <div id="content" class="tab-content">
+      <p>Select a tab to see its content.</p>
+    </div>
+  </section>
+
+  <footer>
+    <small>Made with ❤️ — Z Tabs</small>
+  </footer>
+</div>
+<script src="script.js"></script>
 </body>
 </html>
-
