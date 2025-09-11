@@ -1,8 +1,8 @@
-// Toggle dropdown menu
+// Dropdown menu toggle
 const menuBtn = document.querySelector(".menu-btn");
 const dropdown = document.querySelector(".dropdown");
 
-menuBtn.addEventListener("click", () => {
+menuBtn?.addEventListener("click", () => {
   dropdown.style.display = dropdown.style.display === "flex" ? "none" : "flex";
   dropdown.style.flexDirection = "column";
 });
