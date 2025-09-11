@@ -3,49 +3,83 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create Tab - Z Tabs</title>
+  <title>Create Tab</title>
   <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body { margin: 0; font-family: 'Pacifico', cursive;
+      background-color: #ff9800; color: white; }
+    header {
+      background-color: #e68900; padding: 15px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    header h1 { margin: 0; font-size: 32px; }
+    .dropdown { position: relative; display: inline-block; }
+    .dropbtn {
+      background-color: #cc7700; color: white;
+      font-family: 'Pacifico', cursive; padding: 10px 20px;
+      font-size: 20px; border: none; border-radius: 8px; cursor: pointer;
+    }
+    .dropdown-content { display: none; position: absolute; background-color: #e68900;
+      min-width: 160px; border-radius: 8px; }
+    .dropdown-content a { color: white; padding: 12px 16px; text-decoration: none;
+      display: block; font-size: 18px; }
+    .dropdown-content a:hover { background-color: #cc7700; }
+    .dropdown:hover .dropdown-content { display: block; }
+    main { padding: 20px; text-align: center; }
+    input, textarea {
+      display: block; margin: 10px auto; padding: 8px;
+      border-radius: 6px; border: none; font-size: 16px;
+      width: 80%; max-width: 500px;
+    }
+    button {
+      background-color: #cc7700; border: none;
+      padding: 10px 20px; font-size: 20px;
+      font-family: 'Pacifico', cursive; color: white;
+      border-radius: 8px; cursor: pointer;
+    }
+    button:hover { background-color: #b55f00; }
+  </style>
 </head>
 <body>
-  <nav class="top-bar">
-    <h1>Z Tabs</h1>
-  </nav>
+  <header>
+    <h1>Create Tab</h1>
+    <div class="dropdown">
+      <button class="dropbtn">Menu ▼</button>
+      <div class="dropdown-content">
+        <a href="index.html">Home</a>
+        <a href="tabs.html">Tabs</a>
+        <a href="playlists.html">Playlists</a>
+      </div>
+    </div>
+  </header>
 
   <main>
-    <h1 class="home-title">Create New Tab</h1>
+    <h2>New Tab</h2>
     <form id="tabForm">
-      <input type="text" id="tabTitle" placeholder="Tab Title" required><br><br>
-      <input type="text" id="capo" placeholder="Capo"><br><br>
-      <input type="text" id="tuning" placeholder="Tuning"><br><br>
-      <textarea id="chords" placeholder="Chords"></textarea><br><br>
-      <textarea id="lyrics" placeholder="Lyrics / Tabs"></textarea><br><br>
-      <button type="submit">Create Tab</button>
+      <input type="text" id="name" placeholder="Song Name" required>
+      <input type="text" id="capo" placeholder="Capo (e.g. 2nd fret)">
+      <input type="text" id="tuning" placeholder="Tuning (e.g. EADGBE)">
+      <input type="text" id="chords" placeholder="Chords (e.g. Em G D A)">
+      <textarea id="lyrics" rows="6" placeholder="Lyrics / Tabs"></textarea>
+      <button type="submit">Create</button>
     </form>
   </main>
 
   <script>
-    const form = document.getElementById('tabForm');
-
-    form.addEventListener('submit', (e) => {
+    document.getElementById("tabForm").addEventListener("submit", function(e) {
       e.preventDefault();
-
       const tab = {
-        title: document.getElementById('tabTitle').value,
-        capo: document.getElementById('capo').value,
-        tuning: document.getElementById('tuning').value,
-        chords: document.getElementById('chords').value,
-        lyrics: document.getElementById('lyrics').value
+        name: document.getElementById("name").value,
+        capo: document.getElementById("capo").value,
+        tuning: document.getElementById("tuning").value,
+        chords: document.getElementById("chords").value,
+        lyrics: document.getElementById("lyrics").value
       };
-
-      let savedTabs = JSON.parse(localStorage.getItem('guitarTabs') || '[]');
+      const savedTabs = JSON.parse(localStorage.getItem("tabs")) || [];
       savedTabs.push(tab);
-      localStorage.setItem('guitarTabs', JSON.stringify(savedTabs));
-
-      alert('Tab created!');
-      window.location.href = 'tabs.html';
+      localStorage.setItem("tabs", JSON.stringify(savedTabs));
+      window.location.href = "tabs.html";
     });
   </script>
 </body>
 </html>
-
