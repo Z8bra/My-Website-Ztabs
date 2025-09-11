@@ -1,7 +1,7 @@
 :root {
   --bg: #f6f7fb;
   --card: #ffffff;
-  --accent: #f97316; /* bright orange */
+  --accent: #f97316;
   --muted: #6b7280;
   --text: #111827;
 }
@@ -16,11 +16,6 @@ body {
   padding: 20px;
 }
 
-.app {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
 header h1 {
   margin: 0 0 6px;
   font-size: 28px;
@@ -32,46 +27,27 @@ header p {
   color: var(--muted);
 }
 
-.controls {
-  display: grid;
-  gap: 10px;
+section {
   margin-top: 20px;
-  background: var(--card);
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 6px 18px rgba(15,23,42,0.06);
 }
 
-.controls input, .controls textarea {
-  width: 100%;
-  padding: 10px;
-  margin-top: 6px;
-  border-radius: 6px;
-  border: 1px solid #e6e9ef;
-  font-family: inherit;
-}
-
-.controls button {
+button {
   background: var(--accent);
   color: white;
   border: none;
-  padding: 10px;
+  padding: 10px 14px;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
 }
 
-.controls button:active {
-  transform: translateY(1px);
-}
+button:active { transform: translateY(1px); }
 
-.z-tabs-container {
+.tabs-container {
   display: flex;
-  margin-top: 20px;
   gap: 12px;
 }
 
-/* Tabs */
 .tabs {
   display: flex;
   flex-direction: column;
@@ -95,7 +71,6 @@ header p {
   color: #111;
 }
 
-/* Content */
 .tab-content {
   flex-grow: 1;
   padding: 20px;
