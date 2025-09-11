@@ -1,68 +1,28 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create Tab - Z Tabs</title>
-  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Roboto&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-  <style>
-    form {
-      max-width: 600px;
-      margin: auto;
-      background: rgba(255,255,255,0.1);
-      padding: 20px;
-      border-radius: 12px;
-      text-align: left;
-    }
-    label {
-      display: block;
-      margin: 10px 0 5px;
-      font-weight: bold;
-    }
-    input, textarea, select {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border-radius: 8px;
-      border: none;
-      font-size: 16px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Z Tabs Creator</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header>
-    <h1>Z Tabs</h1>
-    <div class="dropdown">
-      <button class="dropbtn">Menu ▼</button>
-      <div class="dropdown-content">
-        <a href="index.html">Home</a>
-        <a href="tabs.html">Tabs</a>
-        <a href="playlists.html">Playlists</a>
-      </div>
-    </div>
-  </header>
+<header>
+  <h1>Z Tabs Creator</h1>
+  <p>Add new tabs for your songs.</p>
+</header>
 
-  <main>
-    <h2>Create a New Tab</h2>
-    <form>
-      <label for="name">Song Name</label>
-      <input type="text" id="name" placeholder="Enter song name">
+<section class="controls">
+  <label>Song Title
+    <input id="songTitle" placeholder="Enter song title">
+  </label>
+  <label>Song Content
+    <textarea id="songContent" placeholder="Enter content for this song"></textarea>
+  </label>
+  <button id="addTabBtn">Add Tab</button>
+</section>
 
-      <label for="capo">Capo</label>
-      <input type="text" id="capo" placeholder="e.g. 2nd fret">
-
-      <label for="tuning">Tuning</label>
-      <input type="text" id="tuning" placeholder="e.g. Standard EADGBE">
-
-      <label for="chords">Chords</label>
-      <textarea id="chords" rows="4" placeholder="List chords here"></textarea>
-
-      <label for="lyrics">Lyrics</label>
-      <textarea id="lyrics" rows="6" placeholder="Write lyrics with chords above lines"></textarea>
-
-      <button class="btn" type="submit">Create</button>
-    </form>
-  </main>
+<footer><small>Made with ❤️ — Z Tabs</small></footer>
+<script src="script.js"></script>
 </body>
 </html>
