@@ -1,28 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Z Tabs Creator</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Z Tabs Creator</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header>
-  <h1>Z Tabs Creator</h1>
-  <p>Add new tabs for your songs.</p>
-</header>
+  <header>
+    <h1>Z Tabs Creator</h1>
+    <nav>
+      <a href="tabs.html">Tabs</a>
+      <a href="tabs-creator.html">Tab Creator</a>
+      <a href="playlists.html">Playlists</a>
+    </nav>
+  </header>
 
-<section class="controls">
-  <label>Song Title
-    <input id="songTitle" placeholder="Enter song title">
-  </label>
-  <label>Song Content
-    <textarea id="songContent" placeholder="Enter content for this song"></textarea>
-  </label>
-  <button id="addTabBtn">Add Tab</button>
-</section>
+  <main>
+    <form id="tabForm">
+      <label>Song Title</label>
+      <input type="text" id="title" placeholder="Enter song title">
 
-<footer><small>Made with ❤️ — Z Tabs</small></footer>
-<script src="script.js"></script>
+      <label>Song Content</label>
+      <textarea id="content" placeholder="Enter song content or lyrics"></textarea>
+
+      <button type="submit">Save Tab</button>
+    </form>
+  </main>
+
+  <footer>© 2025 Z Tabs</footer>
+  <script src="script.js"></script>
 </body>
 </html>
