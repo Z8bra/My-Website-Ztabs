@@ -74,6 +74,26 @@ main {
   margin: 0;
 }
 
+/* Staff section */
+.staff { margin-top: 24px; }
+.staff h2 { margin: 8px 0 16px; }
+.staff-card { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.staff-photo {
+  width: 220px;
+  height: 220px;
+  border-radius: 16px;
+  object-fit: cover;
+  object-position: 50% 35%;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+}
+.staff-caption { margin: 0; font-size: 1.1rem; }
+
+/* Features section */
+.features { margin-top: 28px; }
+.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.feature-card { background: white; border-radius: 12px; padding: 14px; box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+.feature-card h3 { margin: 0 0 6px; }
+
 .dropdown {
   position: relative;
   display: inline-block;
@@ -122,6 +142,8 @@ main {
 }
 
 /* TABS PAGE */
+.search-bar { margin: 12px 0; }
+.search-bar input { width: 100%; }
 .hidden { display: none; }
 .create-tab-btn { margin-bottom: 12px; }
 .tabs-container {
@@ -241,4 +263,63 @@ button:hover {
   display: flex;
   gap: 10px;
   margin: 10px 0;
+}
+
+/* Single record button */
+.record-button {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  background: var(--orange);
+  display: block;
+  margin: 12px auto 0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  cursor: pointer;
+}
+.record-button.recording {
+  background: var(--dark-orange);
+}
+
+/* Shorts fullscreen viewer */
+.shorts-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.shorts-viewer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: min(480px, 90vw);
+}
+
+.shorts-video-wrapper { position: relative; width: 100%; }
+.shorts-viewer video { width: 100%; aspect-ratio: 9 / 16; border-radius: 14px; background: #000; display: block; }
+.shorts-bottom {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 10px 12px;
+  color: #fff;
+  font-size: 0.95rem;
+  background: linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0));
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+}
+
+.shorts-meta {
+  color: #fff;
+  text-align: center;
+}
+
+@media (min-width: 900px) {
+  .shorts-viewer { flex-direction: row; align-items: flex-start; gap: 24px; width: min(1000px, 92vw); }
+  .shorts-viewer .shorts-video-wrapper { width: 480px; }
+  .shorts-meta { color: #fff; text-align: left; max-width: 420px; font-size: 1.1rem; line-height: 1.4; padding-top: 8px; }
 }

@@ -3,6 +3,79 @@ function getTabs() {
   return JSON.parse(localStorage.getItem("ztabs_data") || "[]");
 }
 
+// ========== SHORTS FULLSCREEN VIEWER ==========
+function openShortsViewer(courses, startIndex) {
+  if (!courses || courses.length === 0) return;
+  let index = Math.max(0, Math.min(startIndex || 0, courses.length - 1));
+
+  const overlay = document.createElement('div');
+  overlay.className = 'shorts-overlay';
+  const viewer = document.createElement('div');
+  viewer.className = 'shorts-viewer';
+  const wrapper = document.createElement('div');
+  wrapper.className = 'shorts-video-wrapper';
+  const video = document.createElement('video');
+  video.className = 'shorts-video';
+  video.controls = true;
+  video.playsInline = true;
+  const bottom = document.createElement('div');
+  bottom.className = 'shorts-bottom';
+  wrapper.appendChild(video);
+  wrapper.appendChild(bottom);
+  const meta = document.createElement('div');
+  meta.className = 'shorts-meta';
+  viewer.appendChild(wrapper);
+  viewer.appendChild(meta);
+  overlay.appendChild(viewer);
+  document.body.appendChild(overlay);
+
+  function updateSlide() {
+    const c = courses[index];
+    if (!c) return;
+    const url = URL.createObjectURL(c.videoBlob);
+    video.src = url;
+    const text = `${c.authorName || 'Creator'} • ${c.views || 0} views`;
+    meta.textContent = text;
+    bottom.textContent = text;
+    video.play().catch(()=>{});
+  }
+
+  async function countViewOnce() {
+    const c = courses[index];
+    if (!c) return;
+    const fresh = await getCourseById(c.id);
+    if (fresh) {
+      fresh.views = (fresh.views || 0) + 1;
+      await updateCourse(fresh);
+      const text = `${fresh.authorName || 'Creator'} • ${fresh.views} views`;
+      meta.textContent = text;
+      bottom.textContent = text;
+    }
+    video.removeEventListener('play', countViewOnce);
+  }
+
+  function next() { if (index < courses.length - 1) { index++; updateSlide(); video.addEventListener('play', countViewOnce); } }
+  function prev() { if (index > 0) { index--; updateSlide(); video.addEventListener('play', countViewOnce); } }
+
+  function onKey(e) {
+    if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); next(); }
+    if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+    if (e.key === 'Escape') { cleanup(); }
+  }
+  function onWheel(e) { if (e.deltaY > 0) next(); else if (e.deltaY < 0) prev(); }
+  function cleanup() {
+    document.removeEventListener('keydown', onKey);
+    overlay.removeEventListener('wheel', onWheel);
+    overlay.remove();
+  }
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(); });
+  document.addEventListener('keydown', onKey);
+  overlay.addEventListener('wheel', onWheel, { passive: true });
+
+  updateSlide();
+  video.addEventListener('play', countViewOnce);
+}
+
 function saveTabs(tabs) {
   localStorage.setItem("ztabs_data", JSON.stringify(tabs));
 }
@@ -29,6 +102,111 @@ function savePlaylists(playlists) {
   localStorage.setItem("ztabs_playlists", JSON.stringify(playlists));
 }
 
+// ========== AUTH ========== 
+function getUsers() {
+  return JSON.parse(localStorage.getItem('ztabs_users') || '{}');
+}
+function saveUsers(map) {
+  localStorage.setItem('ztabs_users', JSON.stringify(map));
+}
+function getCurrentUser() {
+  return JSON.parse(localStorage.getItem('ztabs_current_user') || 'null');
+}
+function setCurrentUser(user) {
+  if (user) localStorage.setItem('ztabs_current_user', JSON.stringify(user));
+  else localStorage.removeItem('ztabs_current_user');
+}
+function isAuthenticated() {
+  return !!getCurrentUser();
+}
+function ensureAuthOrRedirect() {
+  const path = (location.pathname || '').toLowerCase();
+  const publicPages = ['index.html', '/', 'signin.html'];
+  const isPublic = publicPages.some(p => path.endsWith(p));
+  if (!isAuthenticated() && !isPublic) {
+    location.replace('signin.html');
+  }
+}
+function hydrateLoginLink() {
+  const link = document.getElementById('loginLink');
+  if (!link) return;
+  const user = getCurrentUser();
+  if (user) {
+    link.textContent = `Log out (${user.username})`;
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      setCurrentUser(null);
+      location.replace('index.html');
+    }, { once: true });
+  } else {
+    link.textContent = 'Log in';
+  }
+}
+
+function setupSigninPage() {
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
+  const signupTitle = document.getElementById('signupTitle');
+  const showSignup = document.getElementById('showSignup');
+  const showLogin = document.getElementById('showLogin');
+  const loginGoogle = document.getElementById('loginGoogle');
+  const signupGoogle = document.getElementById('signupGoogle');
+  if (!loginForm && !signupForm) return;
+
+  function toSignup() {
+    signupTitle?.classList.remove('hidden');
+    signupForm?.classList.remove('hidden');
+    loginForm?.classList.add('hidden');
+  }
+  function toLogin() {
+    signupTitle?.classList.add('hidden');
+    signupForm?.classList.add('hidden');
+    loginForm?.classList.remove('hidden');
+  }
+  showSignup?.addEventListener('click', (e) => { e.preventDefault(); toSignup(); });
+  showLogin?.addEventListener('click', (e) => { e.preventDefault(); toLogin(); });
+
+  loginForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const users = getUsers();
+    if (!users[username] || users[username] !== password) { alert('Invalid credentials'); return; }
+    setCurrentUser({ username });
+    location.replace('index.html');
+  });
+
+  signupForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = document.getElementById('signupUsername').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    if (!username || !password) { alert('Fill all fields'); return; }
+    const users = getUsers();
+    if (users[username]) { alert('Username is taken'); return; }
+    users[username] = password;
+    saveUsers(users);
+    setCurrentUser({ username });
+    location.replace('index.html');
+  });
+
+  loginGoogle?.addEventListener('click', () => {
+    const username = 'GoogleUser';
+    const users = getUsers();
+    users[username] = users[username] || '';
+    saveUsers(users);
+    setCurrentUser({ username });
+    location.replace('index.html');
+  });
+  signupGoogle?.addEventListener('click', () => {
+    const username = 'GoogleUser';
+    const users = getUsers();
+    users[username] = users[username] || '';
+    saveUsers(users);
+    setCurrentUser({ username });
+    location.replace('index.html');
+  });
+}
+
 // ========== COURSES STORAGE (IndexedDB) ==========
 let _coursesDb;
 function openCoursesDb() {
@@ -45,6 +223,39 @@ function openCoursesDb() {
     };
     req.onsuccess = () => { _coursesDb = req.result; resolve(_coursesDb); };
     req.onerror = () => reject(req.error);
+  });
+}
+
+function renderPlaylistListFiltered(query) {
+  const q = (query || "").toLowerCase();
+  const mount = document.getElementById("playlistList");
+  if (!mount) return;
+  const allTabs = getTabs();
+  const playlists = getPlaylists().filter(pl => (pl.name || "").toLowerCase().includes(q));
+  mount.innerHTML = "";
+  if (playlists.length === 0) { mount.innerHTML = "<p>No results.</p>"; return; }
+  playlists.forEach(pl => {
+    const container = document.createElement("div");
+    container.className = "playlist";
+    const headerBtn = document.createElement("button");
+    headerBtn.className = "tab-btn";
+    headerBtn.textContent = pl.name;
+    const inner = document.createElement("div");
+    inner.style.marginTop = "10px";
+    container.appendChild(headerBtn);
+    container.appendChild(inner);
+    headerBtn.addEventListener("click", () => {
+      inner.innerHTML = "";
+      const listEl = document.createElement("div");
+      listEl.className = "tabs";
+      const contentEl = document.createElement("div");
+      contentEl.className = "tab-content";
+      inner.appendChild(listEl);
+      inner.appendChild(contentEl);
+      const subset = pl.tabIds.map(id => allTabs.find(t => t.id === id)).filter(Boolean);
+      renderTabsInto(listEl, contentEl, subset);
+    });
+    mount.appendChild(container);
   });
 }
 
@@ -134,10 +345,11 @@ function renderTabs() {
         <button class="create-tab-btn" data-tab-id="${tab.id || ''}" id="coursesBtn-${tab.id || 'x'}">Courses</button>
         <div id="coursesList-${tab.id || 'x'}"></div>
       `;
-      const btn = document.getElementById(`coursesBtn-${tab.id || 'x'}`);
-      if (btn && tab.id) {
-        btn.addEventListener('click', async () => {
-          const listEl = document.getElementById(`coursesList-${tab.id}`);
+      const coursesBtn = document.getElementById(`coursesBtn-${tab.id || 'x'}`);
+      if (coursesBtn && tab.id) {
+        coursesBtn.addEventListener('click', async () => {
+          const listEl = document.getElementById(`coursesList-${tab.id || 'x'}`);
+          if (!listEl) return;
           listEl.innerHTML = '<p>Loading courses...</p>';
           const courses = await getCoursesByTabId(tab.id);
           if (!courses.length) { listEl.innerHTML = '<p>No courses yet.</p>'; return; }
@@ -156,7 +368,6 @@ function renderTabs() {
             vid.controls = true;
             vid.src = url;
             vid.title = c.title || tab.title;
-            // Increment views on first play per page load
             let counted = false;
             vid.addEventListener('play', async () => {
               if (counted) return;
@@ -168,6 +379,7 @@ function renderTabs() {
                 meta.textContent = `${fresh.authorName || 'Creator'} • ${fresh.views} views`;
               }
             });
+            vid.addEventListener('click', () => openShortsViewer(courses, courses.findIndex(x => x.id === c.id)));
             card.appendChild(vid);
             card.appendChild(meta);
             grid.appendChild(card);
@@ -179,6 +391,48 @@ function renderTabs() {
   });
 
   // Open the first tab automatically
+  const first = tabList.querySelector(".tab-btn");
+  if (first) first.click();
+}
+
+function renderTabsFiltered(query) {
+  const q = (query || "").toLowerCase();
+  const all = getTabs();
+  const filtered = all.filter(t => {
+    const lyrics = (t.lyrics || t.content || "").toLowerCase();
+    const chords = (t.chords || "").toLowerCase();
+    const title = (t.title || "").toLowerCase();
+    return title.includes(q) || lyrics.includes(q) || chords.includes(q);
+  });
+  const tabList = document.getElementById("tabList");
+  const tabContent = document.getElementById("tabContent");
+  if (!tabList || !tabContent) return;
+  tabList.innerHTML = "";
+  if (filtered.length === 0) {
+    tabContent.innerHTML = `<p>No results.</p>`;
+    return;
+  }
+  filtered.forEach(tab => {
+    const btn = document.createElement("button");
+    btn.className = "tab-btn";
+    btn.textContent = tab.title;
+    btn.onclick = () => {
+      document.querySelectorAll("#tabList .tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const lyrics = tab.lyrics ?? tab.content ?? "";
+      const capo = (tab.capo ?? tab.capoFret ?? "");
+      const tuning = tab.tuning ?? "";
+      const chords = tab.chords ?? "";
+      document.getElementById("tabContent").innerHTML = `
+        <h2>${tab.title}</h2>
+        ${capo !== "" ? `<p><strong>Capo:</strong> ${capo}</p>` : ""}
+        ${tuning ? `<p><strong>Tuning:</strong> ${tuning}</p>` : ""}
+        ${chords ? `<p><strong>Chords:</strong> ${chords}</p>` : ""}
+        ${lyrics ? `<h3>Lyrics</h3><p>${lyrics.replace(/\n/g, '<br>')}</p>` : ""}
+      `;
+    };
+    tabList.appendChild(btn);
+  });
   const first = tabList.querySelector(".tab-btn");
   if (first) first.click();
 }
@@ -412,6 +666,7 @@ function renderPlaylistList() {
 
 // ========== PAGE ROUTING ==========
 document.addEventListener("DOMContentLoaded", () => {
+  ensureAuthOrRedirect();
   renderTabs();
   renderIndexTabs();
   setupCreator();
@@ -422,6 +677,23 @@ document.addEventListener("DOMContentLoaded", () => {
   renderPlaylistList();
   // COURSES PAGE setup
   setupCoursesPage();
+  setupSigninPage();
+  hydrateLoginLink();
+  // Searches
+  const tabSearch = document.getElementById('tabSearch');
+  if (tabSearch) {
+    tabSearch.addEventListener('input', (e) => {
+      const val = e.target.value;
+      if (!val) { renderTabs(); } else { renderTabsFiltered(val); }
+    });
+  }
+  const playlistSearch = document.getElementById('playlistSearch');
+  if (playlistSearch) {
+    playlistSearch.addEventListener('input', (e) => {
+      const val = e.target.value;
+      if (!val) { renderPlaylistList(); } else { renderPlaylistListFiltered(val); }
+    });
+  }
 });
 
 // ========== COURSES PAGE ==========
@@ -431,11 +703,10 @@ function setupCoursesPage() {
   const form = document.getElementById('courseForm');
   const select = document.getElementById('courseTabSelect');
   const preview = document.getElementById('coursePreview');
-  const startBtn = document.getElementById('startRec');
-  const stopBtn = document.getElementById('stopRec');
+  const recordBtn = document.getElementById('recordBtn');
   const saveBtn = document.getElementById('saveCourse');
   const gallery = document.getElementById('coursesGallery');
-  if (!toggle || !creator || !form || !select || !preview || !startBtn || !stopBtn || !saveBtn || !gallery) return;
+  if (!toggle || !creator || !form || !select || !preview || !recordBtn || !saveBtn || !gallery) return;
 
   toggle.addEventListener('click', async () => {
     creator.classList.toggle('hidden');
@@ -454,37 +725,38 @@ function setupCoursesPage() {
     });
   }
 
-  let mediaStream; let mediaRecorder; let chunks = [];
-  startBtn.addEventListener('click', async () => {
-    try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({ video: { aspectRatio: 9/16 }, audio: true });
-      preview.srcObject = mediaStream;
-      chunks = [];
-      mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm' });
-      mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
-      mediaRecorder.onstop = () => { saveBtn.disabled = chunks.length === 0; };
-      mediaRecorder.start();
-      startBtn.disabled = true;
-      stopBtn.disabled = false;
-    } catch (err) {
-      alert('Could not start recording: ' + err.message);
+  let mediaStream; let mediaRecorder; let chunks = []; let isRecording = false;
+  recordBtn.addEventListener('click', async () => {
+    if (!isRecording) {
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: { aspectRatio: 9/16 }, audio: true });
+        preview.srcObject = mediaStream;
+        chunks = [];
+        mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm' });
+        mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+        mediaRecorder.onstop = () => { saveBtn.disabled = chunks.length === 0; };
+        mediaRecorder.start();
+        isRecording = true;
+        recordBtn.classList.add('recording');
+      } catch (err) {
+        alert('Could not start recording: ' + err.message);
+      }
+    } else {
+      try {
+        mediaRecorder && mediaRecorder.stop();
+        mediaStream && mediaStream.getTracks().forEach(t => t.stop());
+      } catch {}
+      isRecording = false;
+      recordBtn.classList.remove('recording');
     }
-  });
-
-  stopBtn.addEventListener('click', () => {
-    try {
-      mediaRecorder && mediaRecorder.stop();
-      mediaStream && mediaStream.getTracks().forEach(t => t.stop());
-    } catch {}
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
   });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!chunks.length) { alert('No recording to save.'); return; }
     const videoBlob = new Blob(chunks, { type: 'video/webm' });
-    const authorName = document.getElementById('courseAuthor').value.trim();
+    const user = getCurrentUser();
+    const authorName = user?.username || 'Creator';
     const tabId = select.value;
     const course = { id: Date.now().toString(36), tabId, authorName, views: 0, videoBlob, createdAt: Date.now() };
     await addCourse(course);
@@ -495,12 +767,19 @@ function setupCoursesPage() {
     renderCoursesGallery();
   });
 
-  async function renderCoursesGallery() {
+  async function renderCoursesGallery(query = '') {
     const courses = await getAllCourses();
     gallery.innerHTML = '';
-    if (!courses.length) { gallery.innerHTML = '<p>No courses yet.</p>'; return; }
-    courses.sort((a,b) => b.createdAt - a.createdAt);
-    courses.forEach(c => {
+    const q = (query || '').toLowerCase();
+    const tabs = getTabs();
+    const filtered = courses.filter(c => {
+      const author = (c.authorName || '').toLowerCase();
+      const title = (tabs.find(t => t.id === c.tabId)?.title || '').toLowerCase();
+      return author.includes(q) || title.includes(q);
+    });
+    if (!filtered.length) { gallery.innerHTML = '<p>No courses yet.</p>'; return; }
+    filtered.sort((a,b) => b.createdAt - a.createdAt);
+    filtered.forEach(c => {
       const url = URL.createObjectURL(c.videoBlob);
       const card = document.createElement('div');
       const caption = document.createElement('div');
@@ -520,11 +799,18 @@ function setupCoursesPage() {
           caption.textContent = `${fresh.authorName || 'Creator'} • ${fresh.views} views`;
         }
       });
+      vid.addEventListener('click', () => openShortsViewer(filtered, filtered.findIndex(x => x.id === c.id)));
       card.appendChild(vid);
       card.appendChild(caption);
       gallery.appendChild(card);
     });
   }
 
-  renderCoursesGallery();
+  const coursesSearch = document.getElementById('coursesSearch');
+  if (coursesSearch) {
+    coursesSearch.addEventListener('input', (e) => {
+      renderCoursesGallery(e.target.value || '');
+    });
+  }
+  renderCoursesGallery('');
 }

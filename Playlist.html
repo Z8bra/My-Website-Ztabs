@@ -16,9 +16,10 @@
       <button class="dropdown-toggle">Menu ▾</button>
       <div class="dropdown-menu">
         <a href="index.html">Home</a>
-        <a href="Tabs.html">Tabs</a>
-        <a href="Playlist.html">Playlists</a>
-        <a href="Courses.html">Coursers</a>
+        <a href="Tabs.html" data-auth-required>Tabs</a>
+        <a href="Playlist.html" data-auth-required>Playlists</a>
+        <a href="Courses.html" data-auth-required>Courses</a>
+        <a href="signin.html" id="loginLink">Log in</a>
       </div>
     </div>
   </header>
@@ -37,6 +38,10 @@
         <button type="submit">Save Playlist</button>
       </form>
     </section>
+
+    <div class="search-bar">
+      <input id="playlistSearch" type="search" placeholder="Search playlists...">
+    </div>
 
     <section id="playlistList"></section>
   </main>

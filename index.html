@@ -16,15 +16,45 @@
       <button class="dropdown-toggle">Menu ▾</button>
       <div class="dropdown-menu">
         <a href="index.html">Home</a>
-        <a href="Tabs.html">Tabs</a>
-        <a href="Playlist.html">Playlists</a>
-        <a href="Courses.html">Courses</a>
+        <a href="Tabs.html" data-auth-required>Tabs</a>
+        <a href="Playlist.html" data-auth-required>Playlists</a>
+        <a href="Courses.html" data-auth-required>Courses</a>
+        <a href="signin.html" id="loginLink">Log in</a>
       </div>
     </div>
   </header>
 
   <div class="home">
     <h1 class="hero-title">Z Tabs</h1>
+    <section class="staff">
+      <h2>Our Staff</h2>
+      <div class="staff-card">
+        <img src="images/zane.jpg" alt="Zane headshot" class="staff-photo" onerror="this.onerror=null;this.src='https://via.placeholder.com/220x220?text=Zane';">
+        <p class="staff-caption">Zane - CEO/Founder</p>
+      </div>
+    </section>
+
+    <section class="features">
+      <h2>Our Features</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>Tabs</h3>
+          <p>Create rich song tabs with capo, tuning, chords, and lyrics.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Playlists</h3>
+          <p>Group your favorite tabs into playlists for quick access.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Courses (Shorts)</h3>
+          <p>Record vertical videos like Shorts and attach them to songs.</p>
+        </div>
+        <div class="feature-card">
+          <h3>Search</h3>
+          <p>Find tabs, playlists, and courses instantly as you type.</p>
+        </div>
+      </div>
+    </section>
   </div>
 <script src="script.js"></script>
 </body>

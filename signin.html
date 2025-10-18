@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log in - Z Tabs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Z Tabs</h1>
+    <div class="dropdown">
+      <button class="dropdown-toggle">Menu ▾</button>
+      <div class="dropdown-menu">
+        <a href="index.html">Home</a>
+        <a href="Tabs.html" data-auth-required>Tabs</a>
+        <a href="Playlist.html" data-auth-required>Playlists</a>
+        <a href="Courses.html" data-auth-required>Courses</a>
+        <a href="signin.html" id="loginLink">Log in</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="auth">
+      <h2>Log in</h2>
+      <form id="loginForm" class="auth-card">
+        <label>Username</label>
+        <input type="text" id="loginUsername" placeholder="Enter username" required>
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="Enter password" required>
+        <button type="submit">Log in</button>
+        <div class="auth-alt">
+          <button type="button" id="loginGoogle">Sign in with Google</button>
+        </div>
+        <small>Don't have an account? <a href="#" id="showSignup">Sign up</a></small>
+      </form>
+
+      <h2 class="hidden" id="signupTitle">Sign up</h2>
+      <form id="signupForm" class="auth-card hidden">
+        <label>Username</label>
+        <input type="text" id="signupUsername" placeholder="Choose a username" required>
+        <label>Password</label>
+        <input type="password" id="signupPassword" placeholder="Choose a password" required>
+        <button type="submit">Create account</button>
+        <div class="auth-alt">
+          <button type="button" id="signupGoogle">Sign up with Google</button>
+        </div>
+        <small>Already have an account? <a href="#" id="showLogin">Log in</a></small>
+      </form>
+    </section>
+  </main>
+
+  <footer>© 2025 Z Tabs</footer>
+  <script src="script.js"></script>
+</body>
+</html>

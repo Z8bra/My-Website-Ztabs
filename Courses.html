@@ -16,9 +16,10 @@
       <button class="dropdown-toggle">Menu ▾</button>
       <div class="dropdown-menu">
         <a href="index.html">Home</a>
-        <a href="Tabs.html">Tabs</a>
-        <a href="Playlist.html">Playlists</a>
-        <a href="Courses.html">Courses</a>
+        <a href="Tabs.html" data-auth-required>Tabs</a>
+        <a href="Playlist.html" data-auth-required>Playlists</a>
+        <a href="Courses.html" data-auth-required>Courses</a>
+        <a href="signin.html" id="loginLink">Log in</a>
       </div>
     </div>
   </header>
@@ -28,18 +29,13 @@
 
     <section class="creator-inline hidden" id="courseCreator">
       <form id="courseForm">
-        <label>Your Name</label>
-        <input type="text" id="courseAuthor" placeholder="e.g., Alex R.">
-
         <label>Select Tab</label>
         <select id="courseTabSelect"></select>
+        <small>Author will be your logged-in username.</small>
 
         <div class="recorder">
           <video id="coursePreview" autoplay muted playsinline class="shorts-video"></video>
-          <div class="rec-controls">
-            <button type="button" id="startRec">Start Recording</button>
-            <button type="button" id="stopRec" disabled>Stop Recording</button>
-          </div>
+          <button type="button" id="recordBtn" class="record-button" aria-label="Record"></button>
         </div>
 
         <button type="submit" id="saveCourse" disabled>Save Course</button>
@@ -48,6 +44,9 @@
 
     <section>
       <h2>All Courses</h2>
+      <div class="search-bar">
+        <input id="coursesSearch" type="search" placeholder="Search courses by author or song...">
+      </div>
       <div id="coursesGallery" class="shorts-grid"></div>
     </section>
   </main>
