@@ -32,31 +32,40 @@
   </section>
 
   <main>
-    <button id="createTabToggle" class="create-tab-btn">Create Tab</button>
-
-    <section class="creator-inline hidden" id="creatorInline">
-      <form id="tabForm">
-        <label>Song Title</label>
-        <input type="text" id="title" placeholder="Enter song title">
-
-        <label>Capo Fret</label>
-        <input type="number" id="capo" placeholder="0" min="0">
-
-        <label>Tuning</label>
-        <input type="text" id="tuning" placeholder="Standard EADGBE">
-
-        <label>Chords</label>
-        <input type="text" id="chords" placeholder="e.g., G, D, Em, C">
-
-        <label>Lyrics</label>
-        <textarea id="lyrics" placeholder="Enter lyrics here"></textarea>
-        <button type="submit">Save Tab</button>
-      </form>
-    </section>
-
     <div class="tabs-container">
-      <div id="tabList" class="tabs"></div>
-      <div id="tabContent" class="tab-content"></div>
+      <div class="tabs">
+        <div class="sidebar-actions">
+          <button id="createTabToggle" class="create-tab-btn">Create Tab</button>
+          <select id="orderTabsSelect" class="order-select" aria-label="Order tabs">
+            <option value="default">Default order</option>
+            <option value="views">Order by views</option>
+            <option value="likes">Order by likes</option>
+          </select>
+        </div>
+        <div id="tabList" class="tabs"></div>
+      </div>
+      <div class="right-pane">
+        <section class="creator-inline hidden" id="creatorInline">
+          <form id="tabForm">
+            <label>Song Title</label>
+            <input type="text" id="title" placeholder="Enter song title">
+
+            <label>Capo Fret</label>
+            <input type="number" id="capo" placeholder="0" min="0">
+
+            <label>Tuning</label>
+            <input type="text" id="tuning" placeholder="Standard EADGBE">
+
+            <label>Chords</label>
+            <input type="text" id="chords" placeholder="e.g., G, D, Em, C">
+
+            <label>Lyrics</label>
+            <textarea id="lyrics" placeholder="Enter lyrics here"></textarea>
+            <button type="submit">Save Tab</button>
+          </form>
+        </section>
+        <div id="tabContent" class="tab-content"></div>
+      </div>
     </div>
   </main>
 

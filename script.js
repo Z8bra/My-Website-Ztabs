@@ -136,6 +136,53 @@ function ensureTabIds() {
   if (changed) saveTabs(tabs);
 }
 
+// Per-tab meta (views, likes, liked flag)
+function _getTabMetaStore() {
+  try { return JSON.parse(localStorage.getItem('ztabs_tab_meta') || '{}'); } catch { return {}; }
+}
+function _saveTabMetaStore(store) {
+  localStorage.setItem('ztabs_tab_meta', JSON.stringify(store));
+}
+function getTabMeta(id) {
+  const s = _getTabMetaStore();
+  return s[id] || { views: 0, likes: 0, liked: false };
+}
+function setTabMeta(id, meta) {
+  const s = _getTabMetaStore();
+  s[id] = meta;
+  _saveTabMetaStore(s);
+}
+function incrementTabView(id) {
+  if (!id) return;
+  const m = getTabMeta(id);
+  m.views = (m.views || 0) + 1;
+  setTabMeta(id, m);
+  return m.views;
+}
+function likeTabOnce(id) {
+  if (!id) return { ok: false, meta: getTabMeta(id) };
+  const m = getTabMeta(id);
+  if (m.liked) return { ok: false, meta: m };
+  m.liked = true;
+  m.likes = (m.likes || 0) + 1;
+  setTabMeta(id, m);
+  return { ok: true, meta: m };
+}
+
+// ========== SORTING (Tabs & Playlists) ==========
+function getSortMode(key) {
+  return localStorage.getItem(key) || 'default';
+}
+function setSortMode(key, mode) {
+  localStorage.setItem(key, mode);
+}
+function cycleSortMode(key) {
+  const cur = getSortMode(key);
+  const next = cur === 'default' ? 'views' : cur === 'views' ? 'likes' : 'default';
+  setSortMode(key, next);
+  return next;
+}
+
 // ========== PLAYLIST STORAGE ==========
 function getPlaylists() {
   return JSON.parse(localStorage.getItem("ztabs_playlists") || "[]");
@@ -267,6 +314,12 @@ function openShortsViewer(courses, startId) {
   function cleanup() {
     window.removeEventListener('keydown', onKey);
     overlay.removeEventListener('wheel', onWheel, { passive: true });
+    overlay.removeEventListener('touchstart', onTouchStart, { passive: true });
+    overlay.removeEventListener('touchmove', onTouchMove, { passive: true });
+    overlay.removeEventListener('touchend', onTouchEnd);
+    overlay.removeEventListener('pointerdown', onPointerDown);
+    overlay.removeEventListener('pointermove', onPointerMove);
+    overlay.removeEventListener('pointerup', onPointerUp);
     closeBtn.removeEventListener('click', onClose);
     overlay.removeEventListener('click', onBackdrop);
     if (currentUrl) { try { URL.revokeObjectURL(currentUrl); } catch {} }
@@ -294,6 +347,48 @@ function openShortsViewer(courses, startId) {
     else if (e.deltaY < -20) prev();
   }
 
+  // Touch swipe (mobile) up/down to navigate
+  let touchStartY = null; let touchStartTime = 0;
+  function onTouchStart(e) {
+    if (!e.touches || e.touches.length === 0) return;
+    touchStartY = e.touches[0].clientY;
+    touchStartTime = Date.now();
+  }
+  function onTouchMove(e) {
+    // passive; we don't prevent default to keep scrolling feel
+  }
+  function onTouchEnd(e) {
+    if (touchStartY == null) return;
+    const endY = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientY : touchStartY;
+    const dy = endY - touchStartY; // positive = swipe down
+    const dt = Date.now() - touchStartTime;
+    // Thresholds similar to social apps
+    if (Math.abs(dy) > 50 && dt < 800) {
+      if (dy < 0) next(); else prev();
+    }
+    touchStartY = null; touchStartTime = 0;
+  }
+
+  // Pointer drag (mouse/touchpad) support
+  let ptrActive = false; let ptrStartY = 0; let ptrLastY = 0; let ptrStartTime = 0;
+  function onPointerDown(e) {
+    if (e.pointerType === 'mouse' && e.buttons !== 1) return;
+    ptrActive = true; ptrStartY = e.clientY; ptrLastY = e.clientY; ptrStartTime = Date.now();
+  }
+  function onPointerMove(e) {
+    if (!ptrActive) return;
+    ptrLastY = e.clientY;
+  }
+  function onPointerUp(e) {
+    if (!ptrActive) return;
+    ptrActive = false;
+    const dy = e.clientY - ptrStartY;
+    const dt = Date.now() - ptrStartTime;
+    if (Math.abs(dy) > 80 && dt < 800) {
+      if (dy < 0) next(); else prev();
+    }
+  }
+
   video.addEventListener('play', () => {
     const course = courses[index];
     countViewFor(course);
@@ -301,6 +396,12 @@ function openShortsViewer(courses, startId) {
 
   window.addEventListener('keydown', onKey);
   overlay.addEventListener('wheel', onWheel, { passive: true });
+  overlay.addEventListener('touchstart', onTouchStart, { passive: true });
+  overlay.addEventListener('touchmove', onTouchMove, { passive: true });
+  overlay.addEventListener('touchend', onTouchEnd);
+  overlay.addEventListener('pointerdown', onPointerDown);
+  overlay.addEventListener('pointermove', onPointerMove);
+  overlay.addEventListener('pointerup', onPointerUp);
   closeBtn.addEventListener('click', onClose);
   overlay.addEventListener('click', onBackdrop);
 
@@ -315,33 +416,73 @@ function renderTabs() {
 
   tabList.innerHTML = "";
   ensureTabIds();
-  const tabs = getTabs();
+  let tabs = getTabs();
+  // Apply ordering
+  const mode = getSortMode('ztabs_sort_tabs');
+  if (mode !== 'default') {
+    tabs = [...tabs].sort((a, b) => {
+      const ma = getTabMeta(a.id || '');
+      const mb = getTabMeta(b.id || '');
+      const va = mode === 'views' ? (ma.views || 0) : (ma.likes || 0);
+      const vb = mode === 'views' ? (mb.views || 0) : (mb.likes || 0);
+      if (vb !== va) return vb - va;
+      return (a.title || '').localeCompare(b.title || '');
+    });
+  }
 
   if (tabs.length === 0) {
     tabContent.innerHTML = `<p>No tabs yet. Click the <strong>Create Tab</strong> button to add one.</p>`;
     return;
   }
 
+  // Show placeholder until a tab is clicked
+  tabContent.innerHTML = `<p>Select a tab to see its content.</p>`;
+
   tabs.forEach((tab, index) => {
     const btn = document.createElement("button");
     btn.className = "tab-btn";
     btn.textContent = tab.title;
     btn.onclick = () => {
+      const wasActive = btn.classList.contains("active");
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      if (wasActive) {
+        tabContent.innerHTML = "";
+        return;
+      }
       btn.classList.add("active");
       const lyrics = tab.lyrics ?? tab.content ?? "";
       const capo = (tab.capo ?? tab.capoFret ?? "");
       const tuning = tab.tuning ?? "";
       const chords = tab.chords ?? "";
+      const likeId = `like-${tab.id || 'x'}`;
+      const viewsId = `views-${tab.id || 'x'}`;
+      const newViews = incrementTabView(tab.id || '');
+      const meta = getTabMeta(tab.id || '');
       tabContent.innerHTML = `
         <h2>${tab.title}</h2>
         ${capo !== "" ? `<p><strong>Capo:</strong> ${capo}</p>` : ""}
         ${tuning ? `<p><strong>Tuning:</strong> ${tuning}</p>` : ""}
         ${chords ? `<p><strong>Chords:</strong> ${chords}</p>` : ""}
         ${lyrics ? `<h3>Lyrics</h3><p>${lyrics.replace(/\n/g, '<br>')}</p>` : ""}
+        <div class="tab-meta" style="margin: 8px 0 12px; display:flex; gap:8px; align-items:center;">
+          <span id="${viewsId}">${meta.views} views</span>
+          <button id="${likeId}" ${meta.liked ? 'disabled' : ''}>❤ Like (${meta.likes || 0})</button>
+        </div>
         <button class="create-tab-btn" data-tab-id="${tab.id || ''}" id="coursesBtn-${tab.id || 'x'}">Courses</button>
         <div id="coursesList-${tab.id || 'x'}"></div>
       `;
+      // Update views text after increment
+      const viewsEl = document.getElementById(viewsId);
+      if (viewsEl) viewsEl.textContent = `${getTabMeta(tab.id || '').views} views`;
+      const likeEl = document.getElementById(likeId);
+      if (likeEl) {
+        likeEl.addEventListener('click', () => {
+          const res = likeTabOnce(tab.id || '');
+          const m = res.meta;
+          likeEl.textContent = `❤ Like (${m.likes || 0})`;
+          if (m.liked) likeEl.disabled = true;
+        });
+      }
       const btn = document.getElementById(`coursesBtn-${tab.id || 'x'}`);
       if (btn && tab.id) {
         btn.addEventListener('click', async () => {
@@ -387,9 +528,7 @@ function renderTabs() {
     tabList.appendChild(btn);
   });
 
-  // Open the first tab automatically
-  const first = tabList.querySelector(".tab-btn");
-  if (first) first.click();
+  // Keep list compact; do not auto-open
 }
 
 // ========== INDEX PAGE (combined create + view) ==========
@@ -412,19 +551,41 @@ function renderIndexTabs() {
     btn.className = "tab-btn";
     btn.textContent = tab.title;
     btn.onclick = () => {
+      const wasActive = btn.classList.contains("active");
       document.querySelectorAll("#tabs .tab-btn").forEach((b) => b.classList.remove("active"));
+      if (wasActive) {
+        tabContent.innerHTML = "";
+        return;
+      }
       btn.classList.add("active");
       const lyrics = tab.lyrics ?? tab.content ?? "";
       const capo = (tab.capo ?? tab.capoFret ?? "");
       const tuning = tab.tuning ?? "";
       const chords = tab.chords ?? "";
+      const likeId = `like-${tab.id || 'x'}`;
+      const viewsId = `views-${tab.id || 'x'}`;
+      incrementTabView(tab.id || '');
+      const meta = getTabMeta(tab.id || '');
       tabContent.innerHTML = `
         <h2>${tab.title}</h2>
         ${capo !== "" ? `<p><strong>Capo:</strong> ${capo}</p>` : ""}
         ${tuning ? `<p><strong>Tuning:</strong> ${tuning}</p>` : ""}
         ${chords ? `<p><strong>Chords:</strong> ${chords}</p>` : ""}
         ${lyrics ? `<h3>Lyrics</h3><p>${lyrics.replace(/\n/g, '<br>')}</p>` : ""}
+        <div class="tab-meta" style="margin: 8px 0 12px; display:flex; gap:8px; align-items:center;">
+          <span id="${viewsId}">${meta.views} views</span>
+          <button id="${likeId}" ${meta.liked ? 'disabled' : ''}>❤ Like (${meta.likes || 0})</button>
+        </div>
       `;
+      const likeEl = document.getElementById(likeId);
+      if (likeEl) {
+        likeEl.addEventListener('click', () => {
+          const res = likeTabOnce(tab.id || '');
+          const m = res.meta;
+          likeEl.textContent = `❤ Like (${m.likes || 0})`;
+          if (m.liked) likeEl.disabled = true;
+        });
+      }
     };
     tabList.appendChild(btn);
   });
@@ -564,58 +725,96 @@ function renderTabsInto(listEl, contentEl, tabs) {
     btn.className = "tab-btn";
     btn.textContent = tab.title;
     btn.onclick = () => {
+      const wasActive = btn.classList.contains("active");
       listEl.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      if (wasActive) {
+        contentEl.innerHTML = "";
+        return;
+      }
       btn.classList.add("active");
       const lyrics = tab.lyrics ?? tab.content ?? "";
       const capo = (tab.capo ?? tab.capoFret ?? "");
       const tuning = tab.tuning ?? "";
       const chords = tab.chords ?? "";
+      const likeId = `like-${tab.id || 'x'}`;
+      const viewsId = `views-${tab.id || 'x'}`;
+      incrementTabView(tab.id || '');
+      const meta = getTabMeta(tab.id || '');
       contentEl.innerHTML = `
         <h2>${tab.title}</h2>
         ${capo !== "" ? `<p><strong>Capo:</strong> ${capo}</p>` : ""}
         ${tuning ? `<p><strong>Tuning:</strong> ${tuning}</p>` : ""}
         ${chords ? `<p><strong>Chords:</strong> ${chords}</p>` : ""}
         ${lyrics ? `<h3>Lyrics</h3><p>${lyrics.replace(/\n/g, '<br>')}</p>` : ""}
+        <div class="tab-meta" style="margin: 8px 0 12px; display:flex; gap:8px; align-items:center;">
+          <span id="${viewsId}">${meta.views} views</span>
+          <button id="${likeId}" ${meta.liked ? 'disabled' : ''}>❤ Like (${meta.likes || 0})</button>
+        </div>
       `;
+      const likeEl = document.getElementById(likeId);
+      if (likeEl) {
+        likeEl.addEventListener('click', () => {
+          const res = likeTabOnce(tab.id || '');
+          const m = res.meta;
+          likeEl.textContent = `❤ Like (${m.likes || 0})`;
+          if (m.liked) likeEl.disabled = true;
+        });
+      }
     };
     listEl.appendChild(btn);
   });
-  const first = listEl.querySelector(".tab-btn");
-  if (first) first.click();
+  // Keep list compact; do not auto-open
 }
 
 function renderPlaylistList() {
   const mount = document.getElementById("playlistList");
+  const rightPane = document.getElementById("playlistContent");
   if (!mount) return;
-  const playlists = getPlaylists();
+  let playlists = getPlaylists();
   const allTabs = getTabs();
+  mount.innerHTML = "";
   if (playlists.length === 0) {
-    mount.innerHTML = "<p>No playlists yet. Create one above.</p>";
+    const empty = document.createElement('p');
+    empty.textContent = "No playlists yet. Create one above.";
+    mount.appendChild(empty);
+    if (rightPane) rightPane.innerHTML = '';
     return;
   }
-  mount.innerHTML = "";
+  // Apply ordering for playlists based on aggregate tab meta
+  const pMode = getSortMode('ztabs_sort_playlists');
+  if (pMode !== 'default') {
+    playlists = [...playlists].sort((pa, pb) => {
+      const sum = (pl, field) => (pl.tabIds || []).reduce((acc, id) => {
+        const m = getTabMeta(id || '');
+        return acc + (m[field] || 0);
+      }, 0);
+      const va = pMode === 'views' ? sum(pa, 'views') : sum(pa, 'likes');
+      const vb = pMode === 'views' ? sum(pb, 'views') : sum(pb, 'likes');
+      if (vb !== va) return vb - va;
+      return (pa.name || '').localeCompare(pb.name || '');
+    });
+  }
   playlists.forEach(pl => {
-    const container = document.createElement("div");
-    container.className = "playlist";
-    const headerBtn = document.createElement("button");
-    headerBtn.className = "tab-btn";
-    headerBtn.textContent = pl.name;
-    const inner = document.createElement("div");
-    inner.style.marginTop = "10px";
-    container.appendChild(headerBtn);
-    container.appendChild(inner);
-    headerBtn.addEventListener("click", () => {
-      inner.innerHTML = "";
-      const listEl = document.createElement("div");
-      listEl.className = "tabs";
-      const contentEl = document.createElement("div");
-      contentEl.className = "tab-content";
-      inner.appendChild(listEl);
-      inner.appendChild(contentEl);
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn';
+    btn.textContent = pl.name;
+    btn.addEventListener('click', () => {
+      // highlight active in left list
+      mount.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (!rightPane) return;
+      rightPane.innerHTML = '';
+      const listEl = document.createElement('div');
+      listEl.className = 'tabs';
+      const contentEl = document.createElement('div');
+      contentEl.className = 'playlist-tab-content';
+      rightPane.appendChild(listEl);
+      rightPane.appendChild(contentEl);
+      contentEl.innerHTML = `<p>Select a tab in this playlist.</p>`;
       const subset = pl.tabIds.map(id => allTabs.find(t => t.id === id)).filter(Boolean);
       renderTabsInto(listEl, contentEl, subset);
     });
-    mount.appendChild(container);
+    mount.appendChild(btn);
   });
 }
 
@@ -635,6 +834,24 @@ document.addEventListener("DOMContentLoaded", () => {
   setupHeaderScroll();
   // Global search (if present on this page)
   setupGlobalSearch();
+  // Ordering controls via dropdowns
+  const orderTabsSelect = document.getElementById('orderTabsSelect');
+  if (orderTabsSelect) {
+    // initialize current mode
+    orderTabsSelect.value = getSortMode('ztabs_sort_tabs');
+    orderTabsSelect.addEventListener('change', () => {
+      setSortMode('ztabs_sort_tabs', orderTabsSelect.value);
+      renderTabs();
+    });
+  }
+  const orderPlaylistsSelect = document.getElementById('orderPlaylistsSelect');
+  if (orderPlaylistsSelect) {
+    orderPlaylistsSelect.value = getSortMode('ztabs_sort_playlists');
+    orderPlaylistsSelect.addEventListener('change', () => {
+      setSortMode('ztabs_sort_playlists', orderPlaylistsSelect.value);
+      renderPlaylistList();
+    });
+  }
 });
 
 // ========== COURSES PAGE ==========

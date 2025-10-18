@@ -32,21 +32,32 @@
   </section>
 
   <main>
-    <button id="createPlaylistToggle" class="create-tab-btn">Create Playlist</button>
+    <div class="tabs-container">
+      <div id="playlistSidebar" class="tabs">
+        <div class="sidebar-actions">
+          <button id="createPlaylistToggle" class="create-tab-btn">Create Playlist</button>
+          <select id="orderPlaylistsSelect" class="order-select" aria-label="Order playlists">
+            <option value="default">Default order</option>
+            <option value="views">Order by views</option>
+            <option value="likes">Order by likes</option>
+          </select>
+        </div>
+        <div id="playlistList"></div>
+      </div>
+      <div id="playlistContent" class="tab-content">
+        <section class="creator-inline hidden" id="playlistCreator">
+          <form id="playlistForm">
+            <label>Playlist Name</label>
+            <input type="text" id="playlistName" placeholder="My Playlist">
 
-    <section class="creator-inline hidden" id="playlistCreator">
-      <form id="playlistForm">
-        <label>Playlist Name</label>
-        <input type="text" id="playlistName" placeholder="My Playlist">
+            <label>Select Tabs</label>
+            <div id="tabChoices"></div>
 
-        <label>Select Tabs</label>
-        <div id="tabChoices"></div>
-
-        <button type="submit">Save Playlist</button>
-      </form>
-    </section>
-
-    <section id="playlistList"></section>
+            <button type="submit">Save Playlist</button>
+          </form>
+        </section>
+      </div>
+    </div>
   </main>
 
   <footer>© 2025 Z Tabs</footer>
