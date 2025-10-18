@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Z Tabs Courses</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Z Tabs Courses</h1>
+    <div class="dropdown">
+      <button class="dropdown-toggle">Menu ▾</button>
+      <div class="dropdown-menu">
+        <a href="index.html">Home</a>
+        <a href="Tabs.html">Tabs</a>
+        <a href="Playlist.html">Playlists</a>
+        <a href="Courses.html">Courses</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <button id="createCourseToggle" class="create-tab-btn">Create Course</button>
+
+    <section class="creator-inline hidden" id="courseCreator">
+      <form id="courseForm">
+        <label>Your Name</label>
+        <input type="text" id="courseAuthor" placeholder="e.g., Alex R.">
+
+        <label>Select Tab</label>
+        <select id="courseTabSelect"></select>
+
+        <div class="recorder">
+          <video id="coursePreview" autoplay muted playsinline class="shorts-video"></video>
+          <div class="rec-controls">
+            <button type="button" id="startRec">Start Recording</button>
+            <button type="button" id="stopRec" disabled>Stop Recording</button>
+          </div>
+        </div>
+
+        <button type="submit" id="saveCourse" disabled>Save Course</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>All Courses</h2>
+      <div id="coursesGallery" class="shorts-grid"></div>
+    </section>
+  </main>
+
+  <footer>© 2025 Z Tabs</footer>
+  <script src="script.js"></script>
+</body>
+</html>

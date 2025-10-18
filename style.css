@@ -7,7 +7,7 @@
 
 * {
   box-sizing: border-box;
-  font-family: "Poppins", sans-serif;
+  font-family: "Pacifico", cursive;
 }
 
 body {
@@ -220,4 +220,25 @@ button:hover {
   margin-bottom: 10px;
   border-radius: 8px;
   box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+}
+
+/* COURSES (Shorts style) */
+.shorts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.shorts-video {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  background: #000;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.rec-controls {
+  display: flex;
+  gap: 10px;
+  margin: 10px 0;
 }

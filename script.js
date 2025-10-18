@@ -29,6 +29,76 @@ function savePlaylists(playlists) {
   localStorage.setItem("ztabs_playlists", JSON.stringify(playlists));
 }
 
+// ========== COURSES STORAGE (IndexedDB) ==========
+let _coursesDb;
+function openCoursesDb() {
+  return new Promise((resolve, reject) => {
+    if (_coursesDb) return resolve(_coursesDb);
+    const req = indexedDB.open('ztabs_db', 1);
+    req.onupgradeneeded = (e) => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('courses')) {
+        const store = db.createObjectStore('courses', { keyPath: 'id' });
+        store.createIndex('tabId', 'tabId', { unique: false });
+        store.createIndex('createdAt', 'createdAt', { unique: false });
+      }
+    };
+    req.onsuccess = () => { _coursesDb = req.result; resolve(_coursesDb); };
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function addCourse(course) {
+  const db = await openCoursesDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('courses', 'readwrite');
+    tx.objectStore('courses').put(course);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function getCoursesByTabId(tabId) {
+  const db = await openCoursesDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('courses', 'readonly');
+    const idx = tx.objectStore('courses').index('tabId');
+    const req = idx.getAll(tabId);
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function getAllCourses() {
+  const db = await openCoursesDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('courses', 'readonly');
+    const req = tx.objectStore('courses').getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function getCourseById(id) {
+  const db = await openCoursesDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('courses', 'readonly');
+    const req = tx.objectStore('courses').get(id);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function updateCourse(course) {
+  const db = await openCoursesDb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('courses', 'readwrite');
+    tx.objectStore('courses').put(course);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 // ========== TABS PAGE ==========
 function renderTabs() {
   const tabList = document.getElementById("tabList");
@@ -61,7 +131,49 @@ function renderTabs() {
         ${tuning ? `<p><strong>Tuning:</strong> ${tuning}</p>` : ""}
         ${chords ? `<p><strong>Chords:</strong> ${chords}</p>` : ""}
         ${lyrics ? `<h3>Lyrics</h3><p>${lyrics.replace(/\n/g, '<br>')}</p>` : ""}
+        <button class="create-tab-btn" data-tab-id="${tab.id || ''}" id="coursesBtn-${tab.id || 'x'}">Courses</button>
+        <div id="coursesList-${tab.id || 'x'}"></div>
       `;
+      const btn = document.getElementById(`coursesBtn-${tab.id || 'x'}`);
+      if (btn && tab.id) {
+        btn.addEventListener('click', async () => {
+          const listEl = document.getElementById(`coursesList-${tab.id}`);
+          listEl.innerHTML = '<p>Loading courses...</p>';
+          const courses = await getCoursesByTabId(tab.id);
+          if (!courses.length) { listEl.innerHTML = '<p>No courses yet.</p>'; return; }
+          listEl.innerHTML = '';
+          const grid = document.createElement('div');
+          grid.className = 'shorts-grid';
+          listEl.appendChild(grid);
+          courses.forEach(c => {
+            const url = URL.createObjectURL(c.videoBlob);
+            const card = document.createElement('div');
+            const meta = document.createElement('div');
+            meta.style.margin = '6px 0';
+            meta.textContent = `${c.authorName || 'Creator'} • ${c.views || 0} views`;
+            const vid = document.createElement('video');
+            vid.className = 'shorts-video';
+            vid.controls = true;
+            vid.src = url;
+            vid.title = c.title || tab.title;
+            // Increment views on first play per page load
+            let counted = false;
+            vid.addEventListener('play', async () => {
+              if (counted) return;
+              counted = true;
+              const fresh = await getCourseById(c.id);
+              if (fresh) {
+                fresh.views = (fresh.views || 0) + 1;
+                await updateCourse(fresh);
+                meta.textContent = `${fresh.authorName || 'Creator'} • ${fresh.views} views`;
+              }
+            });
+            card.appendChild(vid);
+            card.appendChild(meta);
+            grid.appendChild(card);
+          });
+        });
+      }
     };
     tabList.appendChild(btn);
   });
@@ -308,4 +420,111 @@ document.addEventListener("DOMContentLoaded", () => {
   setupPlaylistToggle();
   setupPlaylistCreator();
   renderPlaylistList();
+  // COURSES PAGE setup
+  setupCoursesPage();
 });
+
+// ========== COURSES PAGE ==========
+function setupCoursesPage() {
+  const toggle = document.getElementById('createCourseToggle');
+  const creator = document.getElementById('courseCreator');
+  const form = document.getElementById('courseForm');
+  const select = document.getElementById('courseTabSelect');
+  const preview = document.getElementById('coursePreview');
+  const startBtn = document.getElementById('startRec');
+  const stopBtn = document.getElementById('stopRec');
+  const saveBtn = document.getElementById('saveCourse');
+  const gallery = document.getElementById('coursesGallery');
+  if (!toggle || !creator || !form || !select || !preview || !startBtn || !stopBtn || !saveBtn || !gallery) return;
+
+  toggle.addEventListener('click', async () => {
+    creator.classList.toggle('hidden');
+    if (!creator.classList.contains('hidden')) populateCourseTabsSelect();
+  });
+
+  function populateCourseTabsSelect() {
+    ensureTabIds();
+    const tabs = getTabs();
+    select.innerHTML = '';
+    tabs.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.title;
+      select.appendChild(opt);
+    });
+  }
+
+  let mediaStream; let mediaRecorder; let chunks = [];
+  startBtn.addEventListener('click', async () => {
+    try {
+      mediaStream = await navigator.mediaDevices.getUserMedia({ video: { aspectRatio: 9/16 }, audio: true });
+      preview.srcObject = mediaStream;
+      chunks = [];
+      mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm' });
+      mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+      mediaRecorder.onstop = () => { saveBtn.disabled = chunks.length === 0; };
+      mediaRecorder.start();
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+    } catch (err) {
+      alert('Could not start recording: ' + err.message);
+    }
+  });
+
+  stopBtn.addEventListener('click', () => {
+    try {
+      mediaRecorder && mediaRecorder.stop();
+      mediaStream && mediaStream.getTracks().forEach(t => t.stop());
+    } catch {}
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!chunks.length) { alert('No recording to save.'); return; }
+    const videoBlob = new Blob(chunks, { type: 'video/webm' });
+    const authorName = document.getElementById('courseAuthor').value.trim();
+    const tabId = select.value;
+    const course = { id: Date.now().toString(36), tabId, authorName, views: 0, videoBlob, createdAt: Date.now() };
+    await addCourse(course);
+    alert('Course saved!');
+    chunks = [];
+    form.reset();
+    creator.classList.add('hidden');
+    renderCoursesGallery();
+  });
+
+  async function renderCoursesGallery() {
+    const courses = await getAllCourses();
+    gallery.innerHTML = '';
+    if (!courses.length) { gallery.innerHTML = '<p>No courses yet.</p>'; return; }
+    courses.sort((a,b) => b.createdAt - a.createdAt);
+    courses.forEach(c => {
+      const url = URL.createObjectURL(c.videoBlob);
+      const card = document.createElement('div');
+      const caption = document.createElement('div');
+      caption.textContent = `${c.authorName || 'Creator'} • ${c.views || 0} views`;
+      const vid = document.createElement('video');
+      vid.className = 'shorts-video';
+      vid.controls = true;
+      vid.src = url;
+      let counted = false;
+      vid.addEventListener('play', async () => {
+        if (counted) return;
+        counted = true;
+        const fresh = await getCourseById(c.id);
+        if (fresh) {
+          fresh.views = (fresh.views || 0) + 1;
+          await updateCourse(fresh);
+          caption.textContent = `${fresh.authorName || 'Creator'} • ${fresh.views} views`;
+        }
+      });
+      card.appendChild(vid);
+      card.appendChild(caption);
+      gallery.appendChild(card);
+    });
+  }
+
+  renderCoursesGallery();
+}
