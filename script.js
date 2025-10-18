@@ -3,6 +3,122 @@ function getTabs() {
   return JSON.parse(localStorage.getItem("ztabs_data") || "[]");
 }
 
+// ========== GLOBAL SEARCH ==========
+function setupGlobalSearch() {
+  const input = document.getElementById('globalSearch');
+  const results = document.getElementById('searchResults');
+  if (!input || !results) return;
+
+  let timer;
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    const q = input.value.trim();
+    if (!q) { results.innerHTML = ''; results.classList.add('hidden'); return; }
+    timer = setTimeout(() => performSearch(q, results), 200);
+  });
+
+  // Hide results when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!results.contains(e.target) && e.target !== input) {
+      results.classList.add('hidden');
+    }
+  });
+}
+
+async function performSearch(query, mount) {
+  const q = query.toLowerCase();
+  const tabs = getTabs();
+  const playlists = getPlaylists();
+  let courses = [];
+  try { courses = await getAllCourses(); } catch {}
+
+  const tabHits = tabs.filter(t =>
+    (t.title && t.title.toLowerCase().includes(q)) ||
+    (t.lyrics && t.lyrics.toLowerCase().includes(q)) ||
+    (t.chords && t.chords.toLowerCase().includes(q)) ||
+    (t.tuning && t.tuning.toLowerCase().includes(q))
+  ).slice(0, 5);
+
+  const plHits = playlists.filter(p =>
+    (p.name && p.name.toLowerCase().includes(q))
+  ).slice(0, 5);
+
+  const courseHits = courses.filter(c =>
+    (c.authorName && c.authorName.toLowerCase().includes(q))
+  ).slice(0, 5);
+
+  mount.innerHTML = '';
+
+  function addGroup(title, items, renderItem) {
+    if (!items.length) return;
+    const group = document.createElement('div');
+    group.className = 'search-group';
+    const h = document.createElement('h4');
+    h.textContent = title;
+    group.appendChild(h);
+    items.forEach(it => {
+      const a = renderItem(it);
+      group.appendChild(a);
+    });
+    mount.appendChild(group);
+  }
+
+  addGroup('Tabs', tabHits, (t) => {
+    const a = document.createElement('a');
+    a.className = 'search-item';
+    a.href = 'Tabs.html';
+    a.textContent = t.title || 'Untitled Tab';
+    return a;
+  });
+
+  addGroup('Playlists', plHits, (p) => {
+    const a = document.createElement('a');
+    a.className = 'search-item';
+    a.href = 'Playlist.html';
+    a.textContent = p.name || 'Playlist';
+    return a;
+  });
+
+  addGroup('Courses', courseHits, (c) => {
+    const a = document.createElement('a');
+    a.className = 'search-item';
+    a.href = 'Courses.html';
+    a.textContent = (c.authorName || 'Creator') + ' course';
+    return a;
+  });
+
+  mount.classList.toggle('hidden', mount.innerHTML.trim() === '');
+}
+
+// ========== HEADER SCROLL BEHAVIOR ==========
+function setupHeaderScroll() {
+  let lastY = window.scrollY;
+  let ticking = false;
+  function onScroll() {
+    const y = window.scrollY;
+    const body = document.body;
+    if (y > lastY && y > 20) {
+      body.classList.add('scroll-down');
+      body.classList.remove('scroll-up');
+    } else {
+      body.classList.add('scroll-up');
+      body.classList.remove('scroll-down');
+    }
+    lastY = y;
+    ticking = false;
+  }
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      window.requestAnimationFrame(onScroll);
+      ticking = true;
+    }
+  }, { passive: true });
+  // Initialize state
+  if (window.scrollY <= 0) {
+    document.body.classList.add('scroll-up');
+  }
+}
+
 function saveTabs(tabs) {
   localStorage.setItem("ztabs_data", JSON.stringify(tabs));
 }
@@ -99,6 +215,98 @@ async function updateCourse(course) {
   });
 }
 
+// ========== SHORTS OVERLAY VIEWER ==========
+function openShortsViewer(courses, startId) {
+  if (!Array.isArray(courses) || !courses.length) return;
+  let index = Math.max(0, courses.findIndex(c => c && c.id === startId));
+  let currentUrl = null; let countedId = null;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'shorts-overlay';
+  const frame = document.createElement('div');
+  frame.className = 'shorts-frame';
+  const video = document.createElement('video');
+  video.className = 'shorts-player';
+  video.controls = true;
+  video.autoplay = true;
+  video.playsInline = true;
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'shorts-close';
+  closeBtn.textContent = '×';
+  frame.appendChild(video);
+  frame.appendChild(closeBtn);
+  overlay.appendChild(frame);
+  document.body.appendChild(overlay);
+  const prevOverflow = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
+
+  async function countViewFor(course) {
+    if (!course || countedId === course.id) return;
+    countedId = course.id;
+    const fresh = await getCourseById(course.id);
+    if (fresh) {
+      fresh.views = (fresh.views || 0) + 1;
+      await updateCourse(fresh);
+    }
+  }
+
+  function show(i) {
+    if (i < 0 || i >= courses.length) return;
+    index = i;
+    const course = courses[index];
+    if (!course) return;
+    if (currentUrl) { try { URL.revokeObjectURL(currentUrl); } catch {}
+    }
+    currentUrl = URL.createObjectURL(course.videoBlob);
+    video.src = currentUrl;
+    countedId = null;
+    // Autoplay attempt
+    setTimeout(() => { video.play().catch(() => {}); }, 0);
+  }
+
+  function cleanup() {
+    window.removeEventListener('keydown', onKey);
+    overlay.removeEventListener('wheel', onWheel, { passive: true });
+    closeBtn.removeEventListener('click', onClose);
+    overlay.removeEventListener('click', onBackdrop);
+    if (currentUrl) { try { URL.revokeObjectURL(currentUrl); } catch {} }
+    document.body.style.overflow = prevOverflow;
+    overlay.remove();
+  }
+
+  function onClose() { cleanup(); }
+  function onBackdrop(e) { if (e.target === overlay) cleanup(); }
+  function next() { if (index < courses.length - 1) show(index + 1); }
+  function prev() { if (index > 0) show(index - 1); }
+
+  function onKey(e) {
+    if (e.key === 'Escape') { e.preventDefault(); cleanup(); return; }
+    if (e.key === 'ArrowDown' || e.key === 'PageDown') { e.preventDefault(); next(); return; }
+    if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); prev(); return; }
+  }
+
+  let lastScroll = 0;
+  function onWheel(e) {
+    const now = Date.now();
+    if (now - lastScroll < 300) return;
+    lastScroll = now;
+    if (e.deltaY > 20) next();
+    else if (e.deltaY < -20) prev();
+  }
+
+  video.addEventListener('play', () => {
+    const course = courses[index];
+    countViewFor(course);
+  });
+
+  window.addEventListener('keydown', onKey);
+  overlay.addEventListener('wheel', onWheel, { passive: true });
+  closeBtn.addEventListener('click', onClose);
+  overlay.addEventListener('click', onBackdrop);
+
+  show(index);
+}
+
 // ========== TABS PAGE ==========
 function renderTabs() {
   const tabList = document.getElementById("tabList");
@@ -156,6 +364,7 @@ function renderTabs() {
             vid.controls = true;
             vid.src = url;
             vid.title = c.title || tab.title;
+            vid.addEventListener('click', () => openShortsViewer(courses, c.id));
             // Increment views on first play per page load
             let counted = false;
             vid.addEventListener('play', async () => {
@@ -422,6 +631,10 @@ document.addEventListener("DOMContentLoaded", () => {
   renderPlaylistList();
   // COURSES PAGE setup
   setupCoursesPage();
+  // Sticky header hide/show
+  setupHeaderScroll();
+  // Global search (if present on this page)
+  setupGlobalSearch();
 });
 
 // ========== COURSES PAGE ==========
@@ -431,11 +644,10 @@ function setupCoursesPage() {
   const form = document.getElementById('courseForm');
   const select = document.getElementById('courseTabSelect');
   const preview = document.getElementById('coursePreview');
-  const startBtn = document.getElementById('startRec');
-  const stopBtn = document.getElementById('stopRec');
+  const recToggle = document.getElementById('recToggle');
   const saveBtn = document.getElementById('saveCourse');
   const gallery = document.getElementById('coursesGallery');
-  if (!toggle || !creator || !form || !select || !preview || !startBtn || !stopBtn || !saveBtn || !gallery) return;
+  if (!toggle || !creator || !form || !select || !preview || !recToggle || !saveBtn || !gallery) return;
 
   toggle.addEventListener('click', async () => {
     creator.classList.toggle('hidden');
@@ -454,30 +666,34 @@ function setupCoursesPage() {
     });
   }
 
-  let mediaStream; let mediaRecorder; let chunks = [];
-  startBtn.addEventListener('click', async () => {
-    try {
-      mediaStream = await navigator.mediaDevices.getUserMedia({ video: { aspectRatio: 9/16 }, audio: true });
-      preview.srcObject = mediaStream;
-      chunks = [];
-      mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm' });
-      mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
-      mediaRecorder.onstop = () => { saveBtn.disabled = chunks.length === 0; };
-      mediaRecorder.start();
-      startBtn.disabled = true;
-      stopBtn.disabled = false;
-    } catch (err) {
-      alert('Could not start recording: ' + err.message);
+  let mediaStream; let mediaRecorder; let chunks = []; let isRecording = false;
+  recToggle.addEventListener('click', async () => {
+    if (!isRecording) {
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ video: { aspectRatio: 9/16 }, audio: true });
+        preview.srcObject = mediaStream;
+        chunks = [];
+        mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'video/webm' });
+        mediaRecorder.ondataavailable = (e) => { if (e.data && e.data.size > 0) chunks.push(e.data); };
+        mediaRecorder.onstop = () => { saveBtn.disabled = chunks.length === 0; };
+        mediaRecorder.start();
+        isRecording = true;
+        recToggle.classList.add('recording');
+        recToggle.setAttribute('aria-label', 'Stop');
+        saveBtn.disabled = true;
+      } catch (err) {
+        alert('Could not start recording: ' + err.message);
+      }
+    } else {
+      try {
+        mediaRecorder && mediaRecorder.stop();
+        mediaStream && mediaStream.getTracks().forEach(t => t.stop());
+      } catch {}
+      isRecording = false;
+      recToggle.classList.remove('recording');
+      recToggle.setAttribute('aria-label', 'Record');
+      saveBtn.disabled = chunks.length === 0;
     }
-  });
-
-  stopBtn.addEventListener('click', () => {
-    try {
-      mediaRecorder && mediaRecorder.stop();
-      mediaStream && mediaStream.getTracks().forEach(t => t.stop());
-    } catch {}
-    startBtn.disabled = false;
-    stopBtn.disabled = true;
   });
 
   form.addEventListener('submit', async (e) => {
@@ -509,6 +725,7 @@ function setupCoursesPage() {
       vid.className = 'shorts-video';
       vid.controls = true;
       vid.src = url;
+      vid.addEventListener('click', () => openShortsViewer(courses, c.id));
       let counted = false;
       vid.addEventListener('play', async () => {
         if (counted) return;

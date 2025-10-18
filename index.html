@@ -9,19 +9,29 @@
 <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="home-page">
   <header>
     <h1>Z Tabs</h1>
-    <div class="dropdown">
-      <button class="dropdown-toggle">Menu ▾</button>
-      <div class="dropdown-menu">
-        <a href="index.html">Home</a>
-        <a href="Tabs.html">Tabs</a>
-        <a href="Playlist.html">Playlists</a>
-        <a href="Courses.html">Courses</a>
+    <div class="header-actions">
+      <input type="search" class="search-input" id="globalSearch" placeholder="Search tabs, playlists, courses..."/>
+      <div class="dropdown">
+        <button class="dropdown-toggle">Menu ▾</button>
+        <div class="dropdown-menu">
+          <a href="index.html">Home</a>
+          <a href="Tabs.html">Tabs</a>
+          <a href="Playlist.html">Playlists</a>
+          <a href="Courses.html">Courses</a>
+        </div>
       </div>
     </div>
   </header>
+
+  <div id="searchResults" class="search-results hidden"></div>
+
+  <section class="page-hero">
+    <h2>Home</h2>
+    <p>Welcome to Z Tabs. Explore tabs, playlists, and short courses to learn faster.</p>
+  </section>
 
   <div class="home">
     <h1 class="hero-title">Z Tabs</h1>

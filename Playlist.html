@@ -11,17 +11,25 @@
 </head>
 <body>
   <header>
-    <h1>Z Tabs Playlists</h1>
-    <div class="dropdown">
-      <button class="dropdown-toggle">Menu ▾</button>
-      <div class="dropdown-menu">
-        <a href="index.html">Home</a>
-        <a href="Tabs.html">Tabs</a>
-        <a href="Playlist.html">Playlists</a>
-        <a href="Courses.html">Coursers</a>
+    <h1>Z Tabs</h1>
+    <div class="header-actions">
+      <input type="search" class="search-input" id="globalSearch" placeholder="Search tabs, playlists, courses..."/>
+      <div class="dropdown">
+        <button class="dropdown-toggle">Menu ▾</button>
+        <div class="dropdown-menu">
+          <a href="index.html">Home</a>
+          <a href="Tabs.html">Tabs</a>
+          <a href="Playlist.html">Playlists</a>
+          <a href="Courses.html">Courses</a>
+        </div>
       </div>
     </div>
   </header>
+  <div id="searchResults" class="search-results hidden"></div>
+  <section class="page-hero">
+    <h2>Playlists</h2>
+    <p>Group your favorite tabs into playlists and practice sets.</p>
+  </section>
 
   <main>
     <button id="createPlaylistToggle" class="create-tab-btn">Create Playlist</button>
