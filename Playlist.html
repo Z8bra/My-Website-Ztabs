@@ -9,14 +9,31 @@
 <body>
   <header>
     <h1>Z Tabs Playlists</h1>
-    <nav>
-      <a href="index.html">Home</a>
-      <a href="Tabs.html">Tabs</a>
-      <a href="Playlist.html">Playlists</a>
-    </nav>
+    <div class="dropdown">
+      <button class="dropdown-toggle">Menu ▾</button>
+      <div class="dropdown-menu">
+        <a href="index.html">Home</a>
+        <a href="Tabs.html">Tabs</a>
+        <a href="Playlist.html">Playlists</a>
+      </div>
+    </div>
   </header>
 
   <main>
+    <button id="createPlaylistToggle" class="create-tab-btn">Create Playlist</button>
+
+    <section class="creator-inline hidden" id="playlistCreator">
+      <form id="playlistForm">
+        <label>Playlist Name</label>
+        <input type="text" id="playlistName" placeholder="My Playlist">
+
+        <label>Select Tabs</label>
+        <div id="tabChoices"></div>
+
+        <button type="submit">Save Playlist</button>
+      </form>
+    </section>
+
     <section id="playlistList"></section>
   </main>
 
