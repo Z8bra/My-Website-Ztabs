@@ -1,89 +1,89 @@
-// --- Utility ---
+// ========== Z TABS STORAGE ==========
 function getTabs() {
-  return JSON.parse(localStorage.getItem('ztabs_tabs') || '[]');
+  return JSON.parse(localStorage.getItem("ztabs_data") || "[]");
 }
 
 function saveTabs(tabs) {
-  localStorage.setItem('ztabs_tabs', JSON.stringify(tabs));
+  localStorage.setItem("ztabs_data", JSON.stringify(tabs));
 }
 
-// --- Tabs Page ---
-function renderTabsPage() {
-  const tabsContainer = document.getElementById('tabs');
-  const contentContainer = document.getElementById('content');
-  if (!tabsContainer || !contentContainer) return;
+// ========== TABS PAGE ==========
+function renderTabs() {
+  const tabList = document.getElementById("tabList");
+  const tabContent = document.getElementById("tabContent");
+  if (!tabList || !tabContent) return;
 
-  tabsContainer.innerHTML = '';
+  tabList.innerHTML = "";
   const tabs = getTabs();
 
+  if (tabs.length === 0) {
+    tabContent.innerHTML = `<p>No tabs yet! Go to <a href="tabs-creator.html">Tab Creator</a> to add one.</p>`;
+    return;
+  }
+
   tabs.forEach((tab, index) => {
-    const btn = document.createElement('button');
+    const btn = document.createElement("button");
+    btn.className = "tab-btn";
     btn.textContent = tab.title;
-    btn.className = 'tab-btn';
     btn.onclick = () => {
-      contentContainer.innerHTML = tab.content;
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      tabContent.innerHTML = `<h2>${tab.title}</h2><p>${tab.content}</p>`;
     };
-    tabsContainer.appendChild(btn);
+    tabList.appendChild(btn);
   });
 
-  // Open first tab by default
-  if (tabs.length) {
-    contentContainer.innerHTML = tabs[0].content;
-    tabsContainer.querySelector('.tab-btn').classList.add('active');
-  } else {
-    contentContainer.innerHTML = '<p>No tabs available. Add one!</p>';
-  }
+  // Open the first tab automatically
+  const first = tabList.querySelector(".tab-btn");
+  if (first) first.click();
 }
 
-// --- Tabs Creator Page ---
-function setupCreatorPage() {
-  const addBtn = document.getElementById('addTabBtn');
-  const titleInput = document.getElementById('songTitle');
-  const contentInput = document.getElementById('songContent');
+// ========== CREATOR PAGE ==========
+function setupCreator() {
+  const form = document.getElementById("tabForm");
+  if (!form) return;
 
-  addBtn.onclick = () => {
-    const title = titleInput.value.trim();
-    const content = contentInput.value.trim();
-    if (!title || !content) return alert('Please fill in both fields.');
+  form.addEventListener("submit", e => {
+    e.preventDefault();
+    const title = document.getElementById("title").value.trim();
+    const content = document.getElementById("content").value.trim();
+
+    if (!title || !content) {
+      alert("Please fill in both fields.");
+      return;
+    }
 
     const tabs = getTabs();
     tabs.push({ title, content });
     saveTabs(tabs);
-
-    alert('Tab added successfully!');
-    titleInput.value = '';
-    contentInput.value = '';
-  };
-}
-
-// --- Playlists Page ---
-function renderPlaylistsPage() {
-  const playlistContainer = document.getElementById('playlistContainer');
-  if (!playlistContainer) return;
-
-  const tabs = getTabs();
-  if (!tabs.length) {
-    playlistContainer.innerHTML = '<p>No tabs yet.</p>';
-    return;
-  }
-
-  playlistContainer.innerHTML = '';
-  tabs.forEach((tab, index) => {
-    const div = document.createElement('div');
-    div.innerHTML = `<strong>${tab.title}</strong>: ${tab.content}`;
-    div.style.background = '#fff';
-    div.style.padding = '10px';
-    div.style.borderRadius = '6px';
-    div.style.marginBottom = '8px';
-    playlistContainer.appendChild(div);
+    alert("Tab saved successfully!");
+    form.reset();
   });
 }
 
-// --- Initialize pages based on ID ---
-document.addEventListener('DOMContentLoaded', () => {
-  if (document.getElementById('tabs')) renderTabsPage();
-  if (document.getElementById('addTabBtn')) setupCreatorPage();
-  if (document.getElementById('playlistContainer')) renderPlaylistsPage();
+// ========== PLAYLIST PAGE ==========
+function renderPlaylist() {
+  const list = document.getElementById("playlistList");
+  if (!list) return;
+
+  const tabs = getTabs();
+  if (tabs.length === 0) {
+    list.innerHTML = "<p>No songs or tabs saved yet.</p>";
+    return;
+  }
+
+  list.innerHTML = "";
+  tabs.forEach(tab => {
+    const div = document.createElement("div");
+    div.className = "playlist";
+    div.innerHTML = `<strong>${tab.title}</strong><p>${tab.content}</p>`;
+    list.appendChild(div);
+  });
+}
+
+// ========== PAGE ROUTING ==========
+document.addEventListener("DOMContentLoaded", () => {
+  renderTabs();
+  setupCreator();
+  renderPlaylist();
 });
