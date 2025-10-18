@@ -42,6 +42,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex: 1;
+  min-width: 0; /* allow search input to shrink in flex header */
 }
 
 .search-input {
@@ -94,6 +96,12 @@ body {
   color: var(--text);
   padding: 20px;
 }
+
+/* Prevent horizontal scroll on narrow devices */
+html, body { max-width: 100%; overflow-x: hidden; }
+
+/* Media should never overflow container width */
+img, video, iframe { max-width: 100%; height: auto; }
 
 header {
   background: var(--orange);
@@ -531,7 +539,7 @@ footer {
 
 .shorts-frame {
   position: relative;
-  width: min(380px, 90vw);
+  width: min(380px, 100%);
   aspect-ratio: 9 / 16;
   display: flex;
   align-items: center;
@@ -618,4 +626,10 @@ footer {
 
   /* Keep search results visible under shorter header */
   .search-results { top: 66px; }
+
+  /* Respect iPhone safe areas (notches/rounded corners) */
+  body {
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+  }
 }
