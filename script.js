@@ -262,6 +262,15 @@ async function updateCourse(course) {
   });
 }
 
+// Helper: detect mobile devices (coarse pointer or small viewport)
+function isMobileDevice() {
+  try {
+    return window.matchMedia('(hover: none) and (pointer: coarse)').matches || window.innerWidth <= 768;
+  } catch {
+    return window.innerWidth <= 768;
+  }
+}
+
 // ========== SHORTS OVERLAY VIEWER ==========
 function openShortsViewer(courses, startId) {
   if (!Array.isArray(courses) || !courses.length) return;
