@@ -467,18 +467,28 @@ function renderTabs() {
       const viewsId = `views-${tab.id || 'x'}`;
       const newViews = incrementTabView(tab.id || '');
       const meta = getTabMeta(tab.id || '');
+      // Build two-button toggle header and two views
+      const tabViewId = `tabView-${tab.id || 'x'}`;
+      const coursesViewId = `coursesView-${tab.id || 'x'}`;
+      const showTabBtnId = `showTab-${tab.id || 'x'}`;
+      const showCoursesBtnId = `showCourses-${tab.id || 'x'}`;
       tabContent.innerHTML = `
-        <h2>${tab.title}</h2>
-        ${capo !== "" ? `<p><strong>Capo:</strong> ${capo}</p>` : ""}
-        ${tuning ? `<p><strong>Tuning:</strong> ${tuning}</p>` : ""}
-        ${chords ? `<p><strong>Chords:</strong> ${chords}</p>` : ""}
-        ${lyrics ? `<h3>Lyrics</h3><p>${lyrics.replace(/\n/g, '<br>')}</p>` : ""}
-        <div class="tab-meta" style="margin: 8px 0 12px; display:flex; gap:8px; align-items:center;">
-          <span id="${viewsId}">${meta.views} views</span>
-          <button id="${likeId}" ${meta.liked ? 'disabled' : ''}>❤ Like (${meta.likes || 0})</button>
+        <div class="view-toggle">
+          <button id="${showTabBtnId}" class="toggle-btn active">Tab</button>
+          <button id="${showCoursesBtnId}" class="toggle-btn">Courses</button>
         </div>
-        <button class="create-tab-btn" data-tab-id="${tab.id || ''}" id="coursesBtn-${tab.id || 'x'}">Courses</button>
-        <div id="coursesList-${tab.id || 'x'}"></div>
+        <div id="${tabViewId}">
+          <h2>${tab.title}</h2>
+          ${capo !== "" ? `<p><strong>Capo:</strong> ${capo}</p>` : ""}
+          ${tuning ? `<p><strong>Tuning:</strong> ${tuning}</p>` : ""}
+          ${chords ? `<p><strong>Chords:</strong> ${chords}</p>` : ""}
+          ${lyrics ? `<h3>Lyrics</h3><p>${lyrics.replace(/\n/g, '<br>')}</p>` : ""}
+          <div class="tab-meta" style="margin: 8px 0 12px; display:flex; gap:8px; align-items:center;">
+            <span id="${viewsId}">${meta.views} views</span>
+            <button id="${likeId}" ${meta.liked ? 'disabled' : ''}>❤ Like (${meta.likes || 0})</button>
+          </div>
+        </div>
+        <div id="${coursesViewId}" class="hidden"></div>
       `;
       // Update views text after increment
       const viewsEl = document.getElementById(viewsId);
@@ -492,45 +502,63 @@ function renderTabs() {
           if (m.liked) likeEl.disabled = true;
         });
       }
-      const btn = document.getElementById(`coursesBtn-${tab.id || 'x'}`);
-      if (btn && tab.id) {
-        btn.addEventListener('click', async () => {
-          const listEl = document.getElementById(`coursesList-${tab.id}`);
-          listEl.innerHTML = '<p>Loading courses...</p>';
-          const courses = await getCoursesByTabId(tab.id);
-          if (!courses.length) { listEl.innerHTML = '<p>No courses yet.</p>'; return; }
-          listEl.innerHTML = '';
-          const grid = document.createElement('div');
-          grid.className = 'shorts-grid';
-          listEl.appendChild(grid);
-          courses.forEach(c => {
-            const url = URL.createObjectURL(c.videoBlob);
-            const card = document.createElement('div');
-            const meta = document.createElement('div');
-            meta.style.margin = '6px 0';
-            meta.textContent = `${c.authorName || 'Creator'} • ${c.views || 0} views`;
-            const vid = document.createElement('video');
-            vid.className = 'shorts-video';
-            vid.controls = true;
-            vid.src = url;
-            vid.title = c.title || tab.title;
-            vid.addEventListener('click', () => openShortsViewer(courses, c.id));
-            // Increment views on first play per page load
-            let counted = false;
-            vid.addEventListener('play', async () => {
-              if (counted) return;
-              counted = true;
-              const fresh = await getCourseById(c.id);
-              if (fresh) {
-                fresh.views = (fresh.views || 0) + 1;
-                await updateCourse(fresh);
-                meta.textContent = `${fresh.authorName || 'Creator'} • ${fresh.views} views`;
-              }
-            });
-            card.appendChild(vid);
-            card.appendChild(meta);
-            grid.appendChild(card);
+      // Wire toggle buttons
+      const showTabBtn = document.getElementById(showTabBtnId);
+      const showCoursesBtn = document.getElementById(showCoursesBtnId);
+      const tabView = document.getElementById(tabViewId);
+      const coursesView = document.getElementById(coursesViewId);
+      async function loadCourses() {
+        coursesView.innerHTML = '<p>Loading courses...</p>';
+        const courses = await getCoursesByTabId(tab.id || '');
+        if (!courses.length) { coursesView.innerHTML = '<p>No courses yet.</p>'; return; }
+        coursesView.innerHTML = '';
+        const grid = document.createElement('div');
+        grid.className = 'shorts-grid';
+        coursesView.appendChild(grid);
+        courses.forEach(c => {
+          const url = URL.createObjectURL(c.videoBlob);
+          const card = document.createElement('div');
+          const meta = document.createElement('div');
+          meta.style.margin = '6px 0';
+          meta.textContent = `${c.authorName || 'Creator'} • ${c.views || 0} views`;
+          const vid = document.createElement('video');
+          vid.className = 'shorts-video';
+          vid.controls = true;
+          vid.src = url;
+          vid.title = c.title || tab.title;
+          vid.addEventListener('click', () => openShortsViewer(courses, c.id));
+          let counted = false;
+          vid.addEventListener('play', async () => {
+            if (counted) return;
+            counted = true;
+            const fresh = await getCourseById(c.id);
+            if (fresh) {
+              fresh.views = (fresh.views || 0) + 1;
+              await updateCourse(fresh);
+              meta.textContent = `${fresh.authorName || 'Creator'} • ${fresh.views} views`;
+            }
           });
+          card.appendChild(vid);
+          card.appendChild(meta);
+          grid.appendChild(card);
+        });
+      }
+      if (showTabBtn && showCoursesBtn && tabView && coursesView) {
+        showTabBtn.addEventListener('click', () => {
+          showTabBtn.classList.add('active');
+          showCoursesBtn.classList.remove('active');
+          tabView.classList.remove('hidden');
+          coursesView.classList.add('hidden');
+        });
+        showCoursesBtn.addEventListener('click', async () => {
+          showCoursesBtn.classList.add('active');
+          showTabBtn.classList.remove('active');
+          tabView.classList.add('hidden');
+          coursesView.classList.remove('hidden');
+          if (!coursesView.dataset.loaded) {
+            await loadCourses();
+            coursesView.dataset.loaded = '1';
+          }
         });
       }
     };
@@ -675,9 +703,8 @@ function setupPlaylistToggle() {
   const creator = document.getElementById("playlistCreator");
   if (!toggle || !creator) return;
   toggle.addEventListener("click", () => {
-    const willShow = creator.classList.toggle("hidden");
-    if (!willShow) {
-      // It was hidden and now shown; refresh choices
+    creator.classList.toggle("hidden");
+    if (!creator.classList.contains('hidden')) {
       populateTabChoices();
     }
   });

@@ -366,6 +366,30 @@ body.home-page {
   min-height: 400px;
 }
 
+/* Right-pane top toggle buttons (Tab | Courses) */
+.view-toggle {
+  display: flex;
+  gap: 0;
+  margin-bottom: 12px;
+  border: 2px solid var(--orange);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.toggle-btn {
+  flex: 1 1 50%;
+  background: white;
+  color: var(--orange);
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+}
+
+.toggle-btn.active {
+  background: var(--orange);
+  color: white;
+}
+
 /* CREATOR PAGE */
 form {
   display: flex;
