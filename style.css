@@ -563,3 +563,59 @@ footer {
   text-align: center;
   cursor: pointer;
 }
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  body { padding: 14px; }
+  header { border-radius: 14px; }
+  .page-hero { padding: 14px; }
+}
+
+@media (max-width: 768px) {
+  header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  header h1 { font-size: 1.5rem; }
+  .header-actions {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+  .search-input { width: 100%; }
+  .dropdown { margin-left: auto; }
+
+  .hero-title { font-size: 2.5rem; }
+
+  /* Stack side-by-side layouts */
+  .tabs-container,
+  .z-tabs-container {
+    flex-direction: column;
+  }
+  .tabs { width: 100%; flex-direction: row; flex-wrap: wrap; }
+  .tab-btn { flex: 1 1 160px; }
+  .tab-content { min-height: 280px; padding: 14px; }
+
+  /* Forms tighter on small screens */
+  form { max-width: 100%; }
+
+  /* Shorts grid cells fit small widths */
+  .shorts-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+
+  /* Dropdown menu alignment on narrow screens */
+  .dropdown-menu { left: auto; right: 0; min-width: 140px; }
+}
+
+@media (max-width: 480px) {
+  body { padding: 10px; }
+  header { padding: 0.85rem 1rem; }
+  .hero-title { font-size: 2rem; }
+  .page-hero h2 { font-size: 1.25rem; }
+  .page-hero p { font-size: 0.95rem; }
+
+  .tab-btn { padding: 10px; }
+  button { padding: 10px 12px; }
+
+  /* Keep search results visible under shorter header */
+  .search-results { top: 66px; }
+}
