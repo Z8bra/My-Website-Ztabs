@@ -188,6 +188,69 @@ body.home-page {
 .page-hero h2 { margin: 0 0 6px; font-size: 1.5rem; color: var(--text); }
 .page-hero p { margin: 0; color: rgba(26,26,26,0.75); }
 
+/* WHAT WE OFFER */
+.offer {
+  margin: 18px 0 8px;
+}
+
+.offer-title {
+  margin: 0 0 10px;
+  font-size: 1.25rem;
+  color: var(--text);
+}
+
+.offer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.offer-card {
+  background: linear-gradient(135deg, var(--orange), var(--dark-orange));
+  color: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(255,123,0,0.2);
+  border: 1px solid rgba(255, 92, 0, 0.35);
+}
+
+.offer-card h4 {
+  margin: 0 0 6px;
+}
+
+.offer-card p {
+  margin: 0;
+  opacity: 0.95;
+}
+
+@media (max-width: 960px) {
+  .offer-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .offer-grid { grid-template-columns: 1fr; }
+}
+
+/* CONTACT US */
+.contact {
+  margin: 22px 0 8px;
+}
+
+.contact-title {
+  margin: 0 0 10px;
+  font-size: 1.25rem;
+  color: var(--text);
+}
+
+.contact-card {
+  background: white;
+  border-radius: 12px;
+  border: 2px solid rgba(255,123,0,0.35);
+  box-shadow: 0 8px 20px rgba(2,6,23,0.08);
+  padding: 16px;
+  max-width: 680px;
+}
+
 /* Creator sections centered with closable X */
 .creator-inline {
   position: relative;

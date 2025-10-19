@@ -870,6 +870,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setupHeaderScroll();
   // Global search (if present on this page)
   setupGlobalSearch();
+  // Contact form (home page)
+  setupContactForm();
   // Ordering controls via dropdowns
   const orderTabsSelect = document.getElementById('orderTabsSelect');
   if (orderTabsSelect) {
@@ -889,6 +891,30 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+// ========== CONTACT (HOME) ==========
+function setupContactForm() {
+  const form = document.getElementById('contactForm');
+  const email = document.getElementById('contactEmail');
+  const message = document.getElementById('contactMessage');
+  if (!form || !email || !message) return;
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const em = (email.value || '').trim();
+    const msg = (message.value || '').trim();
+    if (!em || !msg) {
+      alert('Please enter your email and a message.');
+      return;
+    }
+    // Basic email shape check
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    alert('Thanks! Your message has been noted.');
+    form.reset();
+  });
+}
 
 // ========== COURSES PAGE ==========
 function setupCoursesPage() {
