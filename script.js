@@ -3,6 +3,36 @@ function getTabs() {
   return JSON.parse(localStorage.getItem("ztabs_data") || "[]");
 }
 
+// One-time reset via URL param ?reset=1
+function resetAllStateIfRequested() {
+  try {
+    const params = new URLSearchParams(location.search);
+    if (params.get('reset') !== '1') return;
+    // Clear our app-localStorage keys
+    ['ztabs_data','ztabs_playlists','ztabs_tab_meta','ztabs_sort_tabs','ztabs_sort_playlists'].forEach(k => {
+      try { localStorage.removeItem(k); } catch {}
+    });
+    // Delete IndexedDB database used for courses
+    let done = false;
+    const finish = () => {
+      if (done) return; done = true;
+      // Reload without the reset param
+      params.delete('reset');
+      const qs = params.toString();
+      const url = location.pathname + (qs ? '?' + qs : '') + location.hash;
+      location.replace(url);
+    };
+    try {
+      const req = indexedDB.deleteDatabase('ztabs_db');
+      req.onsuccess = finish;
+      req.onerror = finish;
+      req.onblocked = finish;
+    } catch {
+      finish();
+    }
+  } catch {}
+}
+
 // ========== GLOBAL SEARCH ==========
 function setupGlobalSearch() {
   const input = document.getElementById('globalSearch');
@@ -167,6 +197,67 @@ function likeTabOnce(id) {
   m.likes = (m.likes || 0) + 1;
   setTabMeta(id, m);
   return { ok: true, meta: m };
+}
+
+// Chord transpose helpers
+const _CHORDS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const _FLATS = { 'Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#','Bb':'A#' };
+function _normalizeRoot(r){ return _FLATS[r] || r; }
+function _transposeRoot(root, steps){
+  const R = _normalizeRoot(root);
+  const i = _CHORDS.indexOf(R);
+  if (i === -1) return root;
+  const n = (_CHORDS.length + i + steps) % _CHORDS.length;
+  return _CHORDS[n];
+}
+function transposeChordToken(token, steps){
+  const m = token.match(/^([A-G](?:#|b)?)(.*)$/);
+  if (!m) return token;
+  const nr = _transposeRoot(m[1], steps);
+  return nr + (m[2] || '');
+}
+function transposeChordLine(line, steps){
+  return line.split(/\s+/).map(t => transposeChordToken(t, steps)).join(' ');
+}
+function transposeChordText(text, steps){
+  return (text || '').split('\n').map(l => transposeChordLine(l, steps)).join('\n');
+}
+
+// Autoscroll wiring per view
+function wireAutoscrollControls(rootEl, scrollTarget) {
+  const startBtn = rootEl.querySelector('[data-role="auto-btn"]');
+  const speedInput = rootEl.querySelector('[data-role="auto-speed"]');
+  if (!startBtn || !speedInput) return;
+  let timer = null;
+  function stop(){ if (timer){ clearInterval(timer); timer = null; startBtn.textContent = 'Auto-Scroll'; startBtn.classList.remove('active'); } }
+  function start(){
+    stop();
+    const pxPerSec = parseInt(speedInput.value, 10) || 0;
+    if (pxPerSec <= 0) return;
+    const interval = 16;
+    const perTick = (pxPerSec/1000) * interval;
+    startBtn.textContent = 'Pause';
+    startBtn.classList.add('active');
+    timer = setInterval(() => {
+      try {
+        if (scrollTarget === window) {
+          window.scrollBy(0, perTick);
+        } else if (scrollTarget && typeof scrollTarget.scrollBy === 'function') {
+          scrollTarget.scrollBy(0, perTick);
+        } else {
+          window.scrollBy(0, perTick);
+        }
+      } catch {}
+    }, interval);
+  }
+  startBtn.addEventListener('click', () => {
+    if (timer) stop(); else start();
+  });
+  speedInput.addEventListener('input', () => {
+    if (timer) start();
+  });
+  // Clean up on navigation from this view
+  rootEl.addEventListener('removed', stop, { once: true });
 }
 
 // ========== SORTING (Tabs & Playlists) ==========
@@ -459,6 +550,9 @@ function renderTabs() {
         return;
       }
       btn.classList.add("active");
+      // Ensure the inline creator is closed when viewing a tab
+      const creatorInline = document.getElementById("creatorInline");
+      if (creatorInline) creatorInline.classList.add("hidden");
       const lyrics = tab.lyrics ?? tab.content ?? "";
       const capo = (tab.capo ?? tab.capoFret ?? "");
       const tuning = tab.tuning ?? "";
@@ -472,16 +566,29 @@ function renderTabs() {
       const coursesViewId = `coursesView-${tab.id || 'x'}`;
       const showTabBtnId = `showTab-${tab.id || 'x'}`;
       const showCoursesBtnId = `showCourses-${tab.id || 'x'}`;
+      const controlsId = `controls-${tab.id || 'x'}`;
+      const chordsBlockId = `chords-${tab.id || 'x'}`;
       tabContent.innerHTML = `
         <div class="view-toggle">
           <button id="${showTabBtnId}" class="toggle-btn active">Tab</button>
           <button id="${showCoursesBtnId}" class="toggle-btn">Courses</button>
         </div>
         <div id="${tabViewId}">
+          <div id="${controlsId}" class="tab-controls">
+            <div class="controls-left">
+              <button class="control-btn" data-role="auto-btn">Auto-Scroll</button>
+              <input class="speed-slider" type="range" min="0" max="200" value="60" step="5" data-role="auto-speed"/>
+            </div>
+            <div class="controls-right">
+              <button class="control-btn" data-role="transpose-dec">-</button>
+              <span class="transpose-label" data-role="transpose-val">0</span>
+              <button class="control-btn" data-role="transpose-inc">+</button>
+            </div>
+          </div>
           <h2>${tab.title}</h2>
           ${capo !== "" ? `<p><strong>Capo:</strong> ${capo}</p>` : ""}
           ${tuning ? `<p><strong>Tuning:</strong> ${tuning}</p>` : ""}
-          ${chords ? `<p><strong>Chords:</strong> ${chords}</p>` : ""}
+          ${chords ? `<p><strong>Chords:</strong> <span id="${chordsBlockId}">${chords.replace(/\n/g,'<br>')}</span></p>` : ""}
           ${lyrics ? `<h3>Lyrics</h3><p>${lyrics.replace(/\n/g, '<br>')}</p>` : ""}
           <div class="tab-meta" style="margin: 8px 0 12px; display:flex; gap:8px; align-items:center;">
             <span id="${viewsId}">${meta.views} views</span>
@@ -501,6 +608,20 @@ function renderTabs() {
           likeEl.textContent = `❤ Like (${m.likes || 0})`;
           if (m.liked) likeEl.disabled = true;
         });
+      }
+      // Wire autoscroll + transpose for Tab view
+      const controlsEl = document.getElementById(controlsId);
+      if (controlsEl) {
+        wireAutoscrollControls(controlsEl, window);
+        let tSteps = 0;
+        const valEl = controlsEl.querySelector('[data-role="transpose-val"]');
+        const chordsEl = document.getElementById(chordsBlockId);
+        function updateTranspose(){ if (valEl) valEl.textContent = String(tSteps); if (chordsEl) chordsEl.innerHTML = transposeChordText(chords, tSteps).replace(/\n/g,'<br>'); }
+        const dec = controlsEl.querySelector('[data-role="transpose-dec"]');
+        const inc = controlsEl.querySelector('[data-role="transpose-inc"]');
+        dec && dec.addEventListener('click', () => { tSteps = (tSteps - 1 + 12) % 12; updateTranspose(); });
+        inc && inc.addEventListener('click', () => { tSteps = (tSteps + 1) % 12; updateTranspose(); });
+        updateTranspose();
       }
       // Wire toggle buttons
       const showTabBtn = document.getElementById(showTabBtnId);
@@ -603,11 +724,24 @@ function renderIndexTabs() {
       const viewsId = `views-${tab.id || 'x'}`;
       incrementTabView(tab.id || '');
       const meta = getTabMeta(tab.id || '');
+      const controlsId = `idx-controls-${tab.id || 'x'}`;
+      const chordsBlockId = `idx-chords-${tab.id || 'x'}`;
       tabContent.innerHTML = `
+        <div id="${controlsId}" class="tab-controls">
+          <div class="controls-left">
+            <button class="control-btn" data-role="auto-btn">Auto-Scroll</button>
+            <input class="speed-slider" type="range" min="0" max="200" value="60" step="5" data-role="auto-speed"/>
+          </div>
+          <div class="controls-right">
+            <button class="control-btn" data-role="transpose-dec">-</button>
+            <span class="transpose-label" data-role="transpose-val">0</span>
+            <button class="control-btn" data-role="transpose-inc">+</button>
+          </div>
+        </div>
         <h2>${tab.title}</h2>
         ${capo !== "" ? `<p><strong>Capo:</strong> ${capo}</p>` : ""}
         ${tuning ? `<p><strong>Tuning:</strong> ${tuning}</p>` : ""}
-        ${chords ? `<p><strong>Chords:</strong> ${chords}</p>` : ""}
+        ${chords ? `<p><strong>Chords:</strong> <span id="${chordsBlockId}">${chords.replace(/\n/g,'<br>')}</span></p>` : ""}
         ${lyrics ? `<h3>Lyrics</h3><p>${lyrics.replace(/\n/g, '<br>')}</p>` : ""}
         <div class="tab-meta" style="margin: 8px 0 12px; display:flex; gap:8px; align-items:center;">
           <span id="${viewsId}">${meta.views} views</span>
@@ -622,6 +756,19 @@ function renderIndexTabs() {
           likeEl.textContent = `❤ Like (${m.likes || 0})`;
           if (m.liked) likeEl.disabled = true;
         });
+      }
+      const controlsEl = document.getElementById(controlsId);
+      if (controlsEl) {
+        wireAutoscrollControls(controlsEl, window);
+        let tSteps = 0;
+        const valEl = controlsEl.querySelector('[data-role="transpose-val"]');
+        const chordsEl = document.getElementById(chordsBlockId);
+        function updateTranspose(){ if (valEl) valEl.textContent = String(tSteps); if (chordsEl) chordsEl.innerHTML = transposeChordText(chords, tSteps).replace(/\n/g,'<br>'); }
+        const dec = controlsEl.querySelector('[data-role="transpose-dec"]');
+        const inc = controlsEl.querySelector('[data-role="transpose-inc"]');
+        dec && dec.addEventListener('click', () => { tSteps = (tSteps - 1 + 12) % 12; updateTranspose(); });
+        inc && inc.addEventListener('click', () => { tSteps = (tSteps + 1) % 12; updateTranspose(); });
+        updateTranspose();
       }
     };
     tabList.appendChild(btn);
@@ -693,7 +840,14 @@ function setupTabsToggle() {
   if (!toggle || !creatorInline) return;
 
   toggle.addEventListener("click", () => {
-    creatorInline.classList.toggle("hidden");
+    const nowHidden = creatorInline.classList.toggle("hidden");
+    // If creator opened, close any open tab content and deactivate buttons
+    if (!nowHidden) {
+      const tabContent = document.getElementById("tabContent");
+      if (tabContent) tabContent.innerHTML = "";
+      const tabList = document.getElementById("tabList");
+      if (tabList) tabList.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    }
   });
 }
 
@@ -706,6 +860,11 @@ function setupPlaylistToggle() {
     creator.classList.toggle("hidden");
     if (!creator.classList.contains('hidden')) {
       populateTabChoices();
+      // When opening creator, clear right pane and deactivate left buttons
+      const rightPane = document.getElementById('playlistContent');
+      if (rightPane) rightPane.innerHTML = '';
+      const mount = document.getElementById('playlistList');
+      if (mount) mount.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     }
   });
 }
@@ -776,11 +935,24 @@ function renderTabsInto(listEl, contentEl, tabs) {
       const viewsId = `views-${tab.id || 'x'}`;
       incrementTabView(tab.id || '');
       const meta = getTabMeta(tab.id || '');
+      const controlsId = `pl-controls-${tab.id || 'x'}`;
+      const chordsBlockId = `pl-chords-${tab.id || 'x'}`;
       contentEl.innerHTML = `
+        <div id="${controlsId}" class="tab-controls">
+          <div class="controls-left">
+            <button class="control-btn" data-role="auto-btn">Auto-Scroll</button>
+            <input class="speed-slider" type="range" min="0" max="200" value="60" step="5" data-role="auto-speed"/>
+          </div>
+          <div class="controls-right">
+            <button class="control-btn" data-role="transpose-dec">-</button>
+            <span class="transpose-label" data-role="transpose-val">0</span>
+            <button class="control-btn" data-role="transpose-inc">+</button>
+          </div>
+        </div>
         <h2>${tab.title}</h2>
         ${capo !== "" ? `<p><strong>Capo:</strong> ${capo}</p>` : ""}
         ${tuning ? `<p><strong>Tuning:</strong> ${tuning}</p>` : ""}
-        ${chords ? `<p><strong>Chords:</strong> ${chords}</p>` : ""}
+        ${chords ? `<p><strong>Chords:</strong> <span id="${chordsBlockId}">${chords.replace(/\n/g,'<br>')}</span></p>` : ""}
         ${lyrics ? `<h3>Lyrics</h3><p>${lyrics.replace(/\n/g, '<br>')}</p>` : ""}
         <div class="tab-meta" style="margin: 8px 0 12px; display:flex; gap:8px; align-items:center;">
           <span id="${viewsId}">${meta.views} views</span>
@@ -795,6 +967,19 @@ function renderTabsInto(listEl, contentEl, tabs) {
           likeEl.textContent = `❤ Like (${m.likes || 0})`;
           if (m.liked) likeEl.disabled = true;
         });
+      }
+      const controlsEl = document.getElementById(controlsId);
+      if (controlsEl) {
+        wireAutoscrollControls(controlsEl, window);
+        let tSteps = 0;
+        const valEl = controlsEl.querySelector('[data-role="transpose-val"]');
+        const chordsEl = document.getElementById(chordsBlockId);
+        function updateTranspose(){ if (valEl) valEl.textContent = String(tSteps); if (chordsEl) chordsEl.innerHTML = transposeChordText(chords, tSteps).replace(/\n/g,'<br>'); }
+        const dec = controlsEl.querySelector('[data-role="transpose-dec"]');
+        const inc = controlsEl.querySelector('[data-role="transpose-inc"]');
+        dec && dec.addEventListener('click', () => { tSteps = (tSteps - 1 + 12) % 12; updateTranspose(); });
+        inc && inc.addEventListener('click', () => { tSteps = (tSteps + 1) % 12; updateTranspose(); });
+        updateTranspose();
       }
     };
     listEl.appendChild(btn);
@@ -835,6 +1020,9 @@ function renderPlaylistList() {
     btn.className = 'tab-btn';
     btn.textContent = pl.name;
     btn.addEventListener('click', () => {
+      // Hide playlist creator when a playlist is opened
+      const creator = document.getElementById('playlistCreator');
+      if (creator) creator.classList.add('hidden');
       // highlight active in left list
       mount.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
@@ -856,6 +1044,8 @@ function renderPlaylistList() {
 
 // ========== PAGE ROUTING ==========
 document.addEventListener("DOMContentLoaded", () => {
+  // Run one-time reset if requested before any rendering
+  resetAllStateIfRequested();
   renderTabs();
   renderIndexTabs();
   setupCreator();
