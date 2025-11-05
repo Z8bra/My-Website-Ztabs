@@ -199,45 +199,225 @@ function likeTabOnce(id) {
   return { ok: true, meta: m };
 }
 
-// Chord transpose helpers
+// Chord transpose helpers with enhanced chord type support
 const _CHORDS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
 const _FLATS = { 'Db':'C#','Eb':'D#','Gb':'F#','Ab':'G#','Bb':'A#' };
-function _normalizeRoot(r){ return _FLATS[r] || r; }
-function _transposeRoot(root, steps){
+
+function _normalizeRoot(r) { 
+  if (!r) return r;
+  // Handle both flat and sharp notation
+  const root = r.length > 1 && (r[1] === 'b' || r[1] === '#') ? r[0] + r[1] : r[0];
+  return _FLATS[root] || root; 
+}
+
+function _transposeRoot(root, steps) {
   const R = _normalizeRoot(root);
   const i = _CHORDS.indexOf(R);
   if (i === -1) return root;
-  const n = (_CHORDS.length + i + steps) % _CHORDS.length;
+  
+  // Handle both positive and negative steps with proper wrapping
+  let n = (i + steps) % _CHORDS.length;
+  if (n < 0) n += _CHORDS.length;
+  
   return _CHORDS[n];
 }
-function transposeChordToken(token, steps){
-  const m = token.match(/^([A-G](?:#|b)?)(.*)$/);
-  if (!m) return token;
-  const nr = _transposeRoot(m[1], steps);
-  return nr + (m[2] || '');
+
+function transposeChordToken(token, steps) {
+  // Match chord patterns including slashes, suffixes, and bass notes
+  const match = token.match(/^([A-Ga-g][#b]?(?:maj|min|m|M|\+|-|dim|aug|sus|add|\d+|\s)*)(\/\s*[A-Ga-g][#b]?)?/);
+  if (!match) return token;
+  
+  const rootAndSuffix = match[1];
+  const bass = match[2];
+  
+  // Extract just the root note (first character plus optional #/b)
+  const rootMatch = rootAndSuffix.match(/^([A-Ga-g][#b]?)/);
+  if (!rootMatch) return token;
+  
+  const root = rootMatch[1];
+  const suffix = rootAndSuffix.slice(root.length);
+  const newRoot = _transposeRoot(root, steps);
+  
+  // Handle both uppercase and lowercase chord roots
+  const transposedRoot = root === root.toUpperCase() 
+    ? newRoot.toUpperCase() 
+    : newRoot.toLowerCase();
+    
+  return transposedRoot + suffix + (bass ? _transposeRoot(bass, steps) : '');
 }
-function transposeChordLine(line, steps){
-  return line.split(/\s+/).map(t => transposeChordToken(t, steps)).join(' ');
+
+function transposeChordLine(line, steps) {
+  if (!line) return '';
+  // Handle both [chord] and (chord) formats, and standalone chords
+  return line.replace(/(\[([^\]]+)\])|(\(([^)]+)\))|(\b[A-Ga-g][#b]?(?:maj|min|m|M|\+|-|dim|aug|sus|add|\d+)*\b)/g, 
+    (match, p1, p2, p3, p4, p5) => {
+      const chord = p2 || p4 || p5;
+      if (!chord) return match;
+      return match.replace(chord, transposeChordToken(chord, steps));
+    }
+  );
 }
-function transposeChordText(text, steps){
+
+function transposeChordText(text, steps) {
   return (text || '').split('\n').map(l => transposeChordLine(l, steps)).join('\n');
 }
 
 // Autoscroll wiring per view
+// Chord diagram data for common chord shapes
+const CHORD_DIAGRAMS = {
+  'C': { frets: [0, 3, 2, 0, 1, 0], fingers: ['', '3', '2', '', '1', ''] },
+  'C#': { frets: [4, 6, 6, 5, 4, 4], fingers: ['1', '3', '4', '2', '1', '1'], barres: [4] },
+  'D': { frets: [2, 0, 0, 2, 3, 2], fingers: ['1', '0', '0', '2', '4', '3'] },
+  'Dm': { frets: [1, 3, 3, 2, 1, 1], fingers: ['1', '3', '4', '2', '1', '1'], barres: [1] },
+  'E': { frets: [0, 0, 1, 2, 2, 0], fingers: ['0', '0', '1', '2', '3', '0'] },
+  'Em': { frets: [0, 2, 2, 0, 0, 0], fingers: ['0', '1', '2', '0', '0', '0'] },
+  'F': { frets: [1, 1, 2, 3, 3, 1], fingers: ['1', '1', '2', '4', '3', '1'], barres: [1] },
+  'G': { frets: [3, 0, 0, 0, 2, 3], fingers: ['2', '0', '0', '0', '1', '3'] },
+  'A': { frets: [0, 0, 2, 2, 2, 0], fingers: ['0', '0', '1', '2', '3', '0'] },
+  'Am': { frets: [0, 0, 2, 2, 1, 0], fingers: ['0', '0', '2', '3', '1', '0'] },
+  'B': { frets: [2, 2, 4, 4, 4, 2], fingers: ['1', '1', '2', '3', '4', '1'], barres: [2] },
+  'Bm': { frets: [2, 2, 4, 4, 3, 2], fingers: ['1', '1', '3', '4', '2', '1'], barres: [2] },
+  // Add more chords as needed
+};
+
+// Generate chord diagram SVG for a given chord
+function generateChordDiagram(chordName) {
+  const chord = CHORD_DIAGRAMS[chordName];
+  if (!chord) return '';
+  
+  const { frets, fingers, barres = [] } = chord;
+  const width = 120;
+  const height = 160;
+  const margin = 10;
+  const stringSpacing = (width - 2 * margin) / 5;
+  const fretSpacing = (height - 2 * margin) / 5;
+  
+  let svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" class="chord-diagram">`;
+  
+  // Draw nut (thicker line for open position chords)
+  if (frets[0] === 0) {
+    svg += `<line x1="${margin}" y1="${margin}" x2="${width - margin}" y2="${margin}" stroke="#333" stroke-width="3" />`;
+  }
+  
+  // Draw strings (vertical lines)
+  for (let i = 0; i < 6; i++) {
+    const x = margin + i * stringSpacing;
+    svg += `<line x1="${x}" y1="${margin}" x2="${x}" y2="${height - margin}" stroke="#666" stroke-width="${i % 2 === 0 ? 1.5 : 1}" />`;
+  }
+  
+  // Draw frets (horizontal lines)
+  for (let i = 0; i < 5; i++) {
+    const y = margin + i * fretSpacing;
+    svg += `<line x1="${margin}" y1="${y}" x2="${width - margin}" y2="${y}" stroke="#666" stroke-width="1.5" />`;
+  }
+  
+  // Draw barres
+  barres.forEach(barreFret => {
+    const startString = frets.findIndex(f => f === barreFret);
+    const endString = 5 - [...frets].reverse().findIndex(f => f === barreFret);
+    if (startString >= 0 && endString >= 0) {
+      const x1 = margin + startString * stringSpacing;
+      const x2 = margin + (endString - 1) * stringSpacing;
+      const y = margin + (barreFret - 0.5) * fretSpacing;
+      svg += `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="#333" stroke-width="16" stroke-linecap="round" opacity="0.2" />`;
+    }
+  });
+  
+  // Draw finger positions
+  for (let i = 0; i < 6; i++) {
+    const fret = frets[i];
+    if (fret === 0) continue; // Skip open strings
+    
+    const x = margin + (5 - i) * stringSpacing;
+    const y = margin + (fret - 0.5) * fretSpacing;
+    
+    if (fret > 0) {
+      // Draw finger circle
+      svg += `<circle cx="${x}" cy="${y}" r="8" fill="#333" />`;
+      
+      // Draw finger number if available
+      if (fingers && fingers[i]) {
+        svg += `<text x="${x}" y="${y + 4}" text-anchor="middle" fill="white" font-size="10" font-weight="bold">${fingers[i]}</text>`;
+      }
+    }
+  }
+  
+  // Draw muted strings (X)
+  for (let i = 0; i < 6; i++) {
+    if (frets[i] === -1) {
+      const x = margin + (5 - i) * stringSpacing;
+      svg += `<text x="${x}" y="${margin - 5}" text-anchor="middle" font-size="12" font-weight="bold">×</text>`;
+    }
+  }
+  
+  // Draw open strings (O)
+  for (let i = 0; i < 6; i++) {
+    if (frets[i] === 0) {
+      const x = margin + (5 - i) * stringSpacing;
+      svg += `<text x="${x}" y="${margin - 5}" text-anchor="middle" font-size="10">○</text>`;
+    }
+  }
+  
+  // Add chord name
+  svg += `<text x="${width / 2}" y="${height - 5}" text-anchor="middle" font-size="12" font-weight="bold">${chordName}</text>`;
+  
+  svg += '</svg>';
+  return svg;
+}
+
+// Add chord diagrams below chord names in lyrics
+function addChordDiagrams(lyrics) {
+  // Find all chord patterns like [C], [G], etc.
+  return lyrics.replace(/\[([A-Ga-g][#b]?(?:maj|min|m|M|\+|-|dim|aug|sus|add|\d+)*)\]/g, 
+    (match, chordName) => {
+      const baseChord = chordName.replace(/[0-9mM+\-susaddmajmindim#b\s]/g, '');
+      const diagram = CHORD_DIAGRAMS[baseChord] ? 
+        `<div class="chord-diagram-container">${generateChordDiagram(baseChord)}</div>` : '';
+      return `${match}${diagram}`;
+    }
+  );
+}
+
 function wireAutoscrollControls(rootEl, scrollTarget) {
   const startBtn = rootEl.querySelector('[data-role="auto-btn"]');
   const speedInput = rootEl.querySelector('[data-role="auto-speed"]');
   if (!startBtn || !speedInput) return;
+  
+  // Replace the speed input with a select for more options
+  const speedSelect = document.createElement('select');
+  speedSelect.className = 'speed-select';
+  speedSelect.innerHTML = `
+    <option value="15">0.3x (Ultra Slow)</option>
+    <option value="25">0.5x (Very Slow)</option>
+    <option value="35">0.7x (Slow)</option>
+    <option value="50" selected>1.0x (Normal)</option>
+    <option value="80">1.5x (Fast)</option>
+    <option value="100">2.0x (Faster)</option>
+  `;
+  speedSelect.value = speedInput.value || '50';
+  speedInput.replaceWith(speedSelect);
+  
   let timer = null;
-  function stop(){ if (timer){ clearInterval(timer); timer = null; startBtn.textContent = 'Auto-Scroll'; startBtn.classList.remove('active'); } }
-  function start(){
+  
+  function stop() { 
+    if (timer) { 
+      clearInterval(timer); 
+      timer = null; 
+      startBtn.textContent = 'Auto-Scroll'; 
+      startBtn.classList.remove('active'); 
+    } 
+  }
+  
+  function start() {
     stop();
-    const pxPerSec = parseInt(speedInput.value, 10) || 0;
+    const pxPerSec = parseInt(speedSelect.value, 10) || 50;
     if (pxPerSec <= 0) return;
+    
     const interval = 16;
     const perTick = (pxPerSec/1000) * interval;
     startBtn.textContent = 'Pause';
     startBtn.classList.add('active');
+    
     timer = setInterval(() => {
       try {
         if (scrollTarget === window) {
@@ -250,12 +430,118 @@ function wireAutoscrollControls(rootEl, scrollTarget) {
       } catch {}
     }, interval);
   }
+  
+  // Add chord diagrams to the content
+  function addChordDiagrams() {
+    try {
+      // First, find all chord patterns in the text
+      const textNodes = [];
+      const walker = document.createTreeWalker(
+        scrollTarget,
+        NodeFilter.SHOW_TEXT,
+        { 
+          acceptNode: function(node) {
+            // Only process text nodes that aren't inside script/style tags and contain chord patterns
+            if (node.parentNode.nodeName === 'SCRIPT' || 
+                node.parentNode.nodeName === 'STYLE' ||
+                node.parentNode.classList.contains('chord-diagram')) {
+              return NodeFilter.FILTER_REJECT;
+            }
+            return /\[[A-Ga-g][#b]?[^\]]*\]/.test(node.nodeValue) ? 
+                   NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+          }
+        },
+        false
+      );
+      
+      // Collect all matching text nodes
+      while (walker.nextNode()) {
+        textNodes.push(walker.currentNode);
+      }
+      
+      // Process each text node to find and wrap chords
+      textNodes.forEach(textNode => {
+        const text = textNode.nodeValue;
+        const parent = textNode.parentNode;
+        
+        // Skip if already processed
+        if (parent.classList.contains('chord-wrapper') || 
+            parent.querySelector('.chord-diagram')) {
+          return;
+        }
+        
+        // Match chord patterns like [C], [G], etc.
+        const withChords = text.replace(/\[([A-Ga-g][#b]?[^\]]*)\]/g, 
+          (match, chord) => {
+            // Clean up the chord to match our diagram keys
+            const baseChord = chord.replace(/[0-9mM+\-susaddmajmindim#b\s]/g, '');
+            if (CHORD_DIAGRAMS[baseChord]) {
+              const diagram = generateChordDiagram(baseChord);
+              return `<span class="chord-wrapper" data-chord="${chord}">
+                [${chord}]
+                <span class="chord-diagram">${diagram}</span>
+              </span>`;
+            }
+            return match;
+          }
+        );
+        
+        // Only replace if we found chords
+        if (withChords !== text) {
+          const temp = document.createElement('span');
+          temp.innerHTML = withChords;
+          
+          // Replace the text node with our new HTML
+          parent.replaceChild(temp, textNode);
+          
+          // If we replaced the entire content, we might need to re-insert line breaks
+          if (parent === scrollTarget) {
+            const newContent = parent.innerHTML.replace(/\n/g, '<br>');
+            parent.innerHTML = newContent;
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error adding chord diagrams:', error);
+    }
+  }
+  
+  // Initialize chord diagrams and handle dynamic content
+  function initChordDiagrams() {
+    // Remove any existing chord wrappers first to avoid duplicates
+    const existingWrappers = scrollTarget.querySelectorAll('.chord-wrapper');
+    existingWrappers.forEach(wrapper => {
+      const text = wrapper.textContent.replace(/\[|\]/g, '');
+      wrapper.replaceWith(`[${text}]`);
+    });
+    
+    // Add chord diagrams
+    addChordDiagrams();
+  }
+  
+  // Initialize immediately and also after a short delay to catch dynamic content
+  initChordDiagrams();
+  const initDelay = setTimeout(initChordDiagrams, 500);
+  
+  // Also re-run when content changes
+  const observer = new MutationObserver(() => {
+    clearTimeout(initDelay);
+    initChordDiagrams();
+  });
+  observer.observe(scrollTarget, { childList: true, subtree: true });
+  
+  // Clean up observer when component is destroyed
+  rootEl.addEventListener('removed', () => observer.disconnect(), { once: true });
+  
+  // Event listeners
   startBtn.addEventListener('click', () => {
     if (timer) stop(); else start();
   });
-  speedInput.addEventListener('input', () => {
+  
+  speedSelect.addEventListener('change', () => {
     if (timer) start();
   });
+  
   // Clean up on navigation from this view
   rootEl.addEventListener('removed', stop, { once: true });
 }

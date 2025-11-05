@@ -1,3 +1,305 @@
+/* Speed Controls */
+.speed-select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  background: white;
+  font-size: 14px;
+  margin-left: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.speed-select:hover {
+  border-color: var(--dark-orange);
+  box-shadow: 0 0 0 1px var(--dark-orange);
+}
+
+/* Chord Diagrams */
+.chord-wrapper {
+  position: relative;
+  display: inline-block;
+  margin: 0 1px;
+  cursor: help;
+  vertical-align: baseline;
+  line-height: 1.5;
+  transition: all 0.2s ease;
+}
+
+.chord-wrapper:hover {
+  color: var(--dark-orange);
+  z-index: 1001;
+  transform: translateY(-1px);
+}
+
+.chord-diagram {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.95);
+  transform-origin: bottom center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 1002;
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  width: 80px;
+  height: 90px;
+  pointer-events: none;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.chord-wrapper:hover .chord-diagram {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) scale(1);
+  transition-delay: 0.1s;
+}
+
+.chord-diagram svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Chord text styling */
+[data-chord] {
+  position: relative;
+  white-space: nowrap;
+  font-weight: 600;
+  color: #2c3e50;
+  display: inline-block;
+  padding: 0 3px;
+  margin: 0 1px;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+  background: rgba(255, 255, 255, 0.2);
+  line-height: 1.6;
+}
+
+/* Make sure chord diagrams appear above all other content */
+.tab-content {
+  position: relative;
+  z-index: 1;
+  line-height: 1.8;
+  overflow: visible;
+  padding: 5px 8px;
+}
+
+/* Ensure chords are visible in different contexts */
+.tab-content [data-chord],
+.tab-pane [data-chord],
+pre [data-chord] {
+  color: #2c3e50;
+  background: rgba(255, 255, 255, 0.3);
+  padding: 1px 4px;
+  margin: 0 1px;
+  border-radius: 4px;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.2);
+}
+
+/* Better spacing for chord progressions */
+.tab-line {
+  margin: 5px 0;
+  min-height: 1.8em;
+  position: relative;
+}
+
+/* Make sure chord diagrams don't get cut off */
+.tab-content-wrapper {
+  position: relative;
+  overflow: visible;
+}
+
+/* Improve visibility on hover */
+.chord-wrapper:hover [data-chord] {
+  background: rgba(255, 123, 0, 0.1);
+  color: #e14a00;
+  border-bottom-color: #e14a00;
+}
+
+/* Submission Form Styles */
+#submissionForm {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+#submissionForm label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+}
+
+#submissionForm input[type="text"],
+#submissionForm input[type="email"],
+#submissionForm select,
+#submissionForm textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#submissionForm input[type="text"]:focus,
+#submissionForm input[type="email"]:focus,
+#submissionForm select:focus,
+#submissionForm textarea:focus {
+  border-color: var(--dark-orange);
+  box-shadow: 0 0 0 2px rgba(255, 123, 0, 0.2);
+  outline: none;
+}
+
+#submissionForm textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.submit-btn {
+  background: var(--dark-orange);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #e14a00;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.submit-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.spinner {
+  display: none;
+  margin-left: 10px;
+}
+
+.spinner:after {
+  content: "";
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 500px;
+  width: 100%;
+  position: relative;
+  text-align: center;
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+}
+
+.close-modal {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #999;
+  transition: color 0.3s ease;
+}
+
+.close-modal:hover {
+  color: #333;
+}
+
+.modal h3 {
+  color: var(--dark-orange);
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.modal p {
+  margin-bottom: 25px;
+  line-height: 1.6;
+  color: #555;
+}
+
+.modal-close-btn {
+  background: var(--dark-orange);
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.modal-close-btn:hover {
+  background: #e14a00;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  #submissionForm {
+    padding: 15px;
+  }
+  
+  .modal-content {
+    padding: 20px;
+  }
+}
+
 /* Emphasize key action buttons */
 .create-tab-btn, .order-btn {
   background: linear-gradient(135deg, var(--dark-orange), #e14a00);
