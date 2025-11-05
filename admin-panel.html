@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Pending Submissions</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .submission {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .submission h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .submission-meta {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+        .submission-content {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .video-preview {
+            width: 100%;
+            max-width: 400px;
+            margin: 10px 0;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .btn-approve {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .btn-reject {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .btn-approve:hover {
+            background-color: #27ae60;
+        }
+        .btn-reject:hover {
+            background-color: #c0392b;
+        }
+        .no-submissions {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 40px 0;
+        }
+        .tab {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 5px 10px 5px 0;
+            background: #e0e0e0;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pending Submissions</h1>
+    <div id="submissions-container">
+        <div class="no-submissions">Loading submissions...</div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSubmissions();
+        });
+
+        function loadSubmissions() {
+            const container = document.getElementById('submissions-container');
+            const submissions = JSON.parse(localStorage.getItem('pendingSubmissions') || '[]');
+            
+            if (submissions.length === 0) {
+                container.innerHTML = '<div class="no-submissions">No pending submissions.</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            
+            submissions.forEach((submission, index) => {
+                const submissionEl = document.createElement('div');
+                submissionEl.className = 'submission';
+                submissionEl.id = `submission-${submission.id}`;
+                
+                let content = '';
+                
+                if (submission.type === 'tab') {
+                    content = `
+                        <h3>New Tab Submission: ${submission.data.title || 'Untitled Tab'}</h3>
+                        <div class="submission-meta">
+                            Submitted by: ${submission.data.email || 'Anonymous'} | 
+                            Artist: ${submission.data.artist || 'Not specified'} | 
+                            ${new Date(submission.submittedAt).toLocaleString()}
+                        </div>
+                        <div class="tab">Capo: ${submission.data.capo || 'None'}</div>
+                        <div class="tab">Tuning: ${submission.data.tuning || 'Standard'}</div>
+                        ${submission.data.chords ? `<div class="tab">Chords: ${submission.data.chords}</div>` : ''}
+                        <div class="submission-content">${escapeHtml(submission.data.content || '')}</div>
+                    `;
+                } else if (submission.type === 'course') {
+                    content = `
+                        <h3>New Course Submission: ${submission.data.title || 'Untitled Course'}</h3>
+                        <div class="submission-meta">
+                            Submitted by: ${submission.data.email || 'Anonymous'} | 
+                            Instructor: ${submission.data.instructor || 'Not specified'} | 
+                            ${new Date(submission.submittedAt).toLocaleString()}
+                        </div>
+                        ${submission.data.tabId ? `<div>Linked Tab ID: ${submission.data.tabId}</div>` : ''}
+                        ${submission.videoData ? `
+                            <div style="margin: 15px 0;">
+                                <div>Video Preview:</div>
+                                <video class="video-preview" controls>
+                                    <source src="${submission.videoData}" type="video/webm">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        ` : ''}
+                    `;
+                }
+                
+                submissionEl.innerHTML = `
+                    ${content}
+                    <div class="action-buttons">
+                        <button class="btn btn-approve" onclick="handleAction('${submission.id}', 'approve')">
+                            Approve
+                        </button>
+                        <button class="btn btn-reject" onclick="handleAction('${submission.id}', 'reject')">
+                            Reject
+                        </button>
+                    </div>
+                `;
+                
+                container.appendChild(submissionEl);
+            });
+        }
+
+        function handleAction(submissionId, action) {
+            const submissions = JSON.parse(localStorage.getItem('pendingSubmissions') || '[]');
+            const submissionIndex = submissions.findIndex(s => s.id === submissionId);
+            
+            if (submissionIndex === -1) {
+                alert('Submission not found!');
+                return;
+            }
+            
+            const submission = submissions[submissionIndex];
+            
+            if (action === 'approve') {
+                // Move to approved submissions
+                const approved = JSON.parse(localStorage.getItem('approvedSubmissions') || '[]');
+                submission.status = 'approved';
+                submission.approvedAt = new Date().toISOString();
+                approved.push(submission);
+                localStorage.setItem('approvedSubmissions', JSON.stringify(approved));
+                
+                // Remove from pending
+                submissions.splice(submissionIndex, 1);
+                localStorage.setItem('pendingSubmissions', JSON.stringify(submissions));
+                
+                // Update UI
+                document.getElementById(`submission-${submissionId}`).remove();
+                if (submissions.length === 0) {
+                    document.getElementById('submissions-container').innerHTML = 
+                        '<div class="no-submissions">No pending submissions.</div>';
+                }
+                
+                alert('Submission approved and published!');
+                
+            } else if (action === 'reject') {
+                // Just remove from pending
+                submissions.splice(submissionIndex, 1);
+                localStorage.setItem('pendingSubmissions', JSON.stringify(submissions));
+                
+                // Update UI
+                document.getElementById(`submission-${submissionId}`).remove();
+                if (submissions.length === 0) {
+                    document.getElementById('submissions-container').innerHTML = 
+                        '<div class="no-submissions">No pending submissions.</div>';
+                }
+                
+                alert('Submission rejected and removed.');
+            }
+        }
+        
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;")
+                .replace(/\n/g, '<br>');
+        }
+    </script>
+</body>
+</html>

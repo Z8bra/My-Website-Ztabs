@@ -21,6 +21,7 @@
           <a href="Tabs.html">Tabs</a>
           <a href="Playlist.html">Playlists</a>
           <a href="Courses.html">Courses</a>
+          <a href="admin.html" class="admin-link">Admin</a>
         </div>
       </div>
     </div>
@@ -36,20 +37,40 @@
 
     <section class="creator-inline hidden" id="courseCreator">
       <form id="courseForm">
-        <label>Your Name</label>
-        <input type="text" id="courseAuthor" placeholder="e.g., Alex R.">
+        <div class="form-group">
+          <label>Your Name</label>
+          <input type="text" id="courseAuthor" placeholder="e.g., Alex R." required>
+        </div>
+        
+        <div class="form-group">
+          <label>Your Email</label>
+          <input type="email" id="courseEmail" placeholder="Enter your email" required>
+        </div>
 
-        <label>Select Tab</label>
-        <select id="courseTabSelect"></select>
+        <div class="form-group">
+          <label>Select Tab</label>
+          <select id="courseTabSelect" required></select>
+        </div>
 
-        <div class="recorder">
-          <video id="coursePreview" autoplay muted playsinline class="shorts-video"></video>
-          <div class="rec-controls">
-            <button type="button" id="recToggle" class="record-btn" aria-label="Record"></button>
+        <div class="form-group">
+          <div class="recorder">
+            <video id="coursePreview" autoplay muted playsinline class="shorts-video"></video>
+            <div class="rec-controls">
+              <button type="button" id="recToggle" class="record-btn" aria-label="Record"></button>
+            </div>
           </div>
         </div>
 
-        <button type="submit" id="saveCourse" disabled>Save Course</button>
+        <div class="form-actions">
+          <button type="submit" id="saveCourse" disabled class="submit-btn">
+            <span class="btn-text">Submit for Review</span>
+            <span class="spinner hidden">⌛</span>
+          </button>
+        </div>
+        
+        <div id="courseNotification" class="notification hidden">
+          Your course has been submitted for review. We'll notify you via email once it's approved!
+        </div>
       </form>
     </section>
 
@@ -60,6 +81,34 @@
   </main>
 
   <footer>© 2025 Z Tabs</footer>
+
+  <!-- Success Modal -->
+  <div id="successModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h3>Thank You!</h3>
+      <p>Your course has been submitted for review. We'll notify you via email once it's been processed.</p>
+      <button class="modal-close-btn">Close</button>
+    </div>
+  </div>
+
+  <!-- EmailJS SDK -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script type="text/javascript">
+    // Initialize EmailJS with your public key
+    (function() {
+      emailjs.init({
+        publicKey: 'm9bvw_v9ELN-feKur', // Your EmailJS public key
+        blockHeadless: true,
+        limitRate: {
+          id: 'app',
+          throttle: 1000,
+        },
+      });
+    })();
+  </script>
+  
   <script src="script.js"></script>
+  <script src="submission-handler.js"></script>
 </body>
 </html>

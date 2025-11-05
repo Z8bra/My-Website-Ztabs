@@ -9,26 +9,79 @@
 <body>
   <header>
     <h1>Z Tabs Creator</h1>
-    <nav>
-      <a href="Tabs.html">Tabs</a>
-      <a href="Tabs-creator.html">Tab Creator</a>
-      <a href="Playlist.html">Playlists</a>
-    </nav>
+    <div class="header-actions">
+      <input type="search" class="search-input" id="globalSearch" placeholder="Search tabs, playlists, courses..."/>
+      <div class="dropdown">
+        <button class="dropdown-toggle">Menu ▾</button>
+        <div class="dropdown-menu">
+          <a href="index.html">Home</a>
+          <a href="Tabs.html">Tabs</a>
+          <a href="Tabs-creator.html">Tab Creator</a>
+          <a href="Playlist.html">Playlists</a>
+          <a href="Courses.html">Courses</a>
+          <a href="admin.html" class="admin-link" style="display: none;">Admin</a>
+        </div>
+      </div>
+    </div>
   </header>
+  <div id="searchResults" class="search-results hidden"></div>
 
   <main>
     <form id="tabForm">
       <label>Song Title</label>
-      <input type="text" id="title" placeholder="Enter song title">
+      <input type="text" id="title" placeholder="Enter song title" required>
+      
+      <label>Artist</label>
+      <input type="text" id="artist" placeholder="Enter artist name" required>
+
+      <label>Your Email</label>
+      <input type="email" id="email" placeholder="Enter your email" required>
 
       <label>Song Content</label>
-      <textarea id="content" placeholder="Enter song content or lyrics"></textarea>
+      <textarea id="content" placeholder="Enter song content or lyrics" required></textarea>
 
-      <button type="submit">Save Tab</button>
+      <div class="form-actions">
+        <button type="submit" id="submitBtn" class="submit-btn">
+          <span class="btn-text">Submit for Review</span>
+          <span class="spinner hidden">⌛</span>
+        </button>
+      </div>
+      
+      <div id="notification" class="notification hidden">
+        Your tab has been submitted for review. We'll notify you via email once it's approved!
+      </div>
     </form>
   </main>
 
   <footer>© 2025 Z Tabs</footer>
+
+  <!-- Success Modal -->
+  <div id="successModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <h3>Thank You!</h3>
+      <p>Your tab has been submitted for review. We'll notify you via email once it's been processed.</p>
+      <button class="modal-close-btn">Close</button>
+    </div>
+  </div>
+
+  <!-- EmailJS SDK -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script type="text/javascript">
+    // Initialize EmailJS with your public key
+    (function() {
+      emailjs.init({
+        publicKey: 'm9bvw_v9ELN-feKur', // Your EmailJS public key
+        blockHeadless: true,
+        limitRate: {
+          id: 'app',
+          throttle: 1000,
+        },
+      });
+    })();
+  </script>
+  
   <script src="script.js"></script>
+  <script src="submission-handler.js"></script>
 </body>
 </html>

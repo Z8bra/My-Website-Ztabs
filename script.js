@@ -1332,6 +1332,9 @@ function renderPlaylistList() {
 document.addEventListener("DOMContentLoaded", () => {
   // Run one-time reset if requested before any rendering
   resetAllStateIfRequested();
+  
+  // Set up form submissions
+  setupFormSubmissions();
   renderTabs();
   renderIndexTabs();
   setupCreator();
@@ -1390,6 +1393,95 @@ function setupContactForm() {
     alert('Thanks! Your message has been noted.');
     form.reset();
   });
+}
+
+// ========== FORM SUBMISSION ==========
+function setupFormSubmissions() {
+  // Tab form submission
+  const tabForm = document.getElementById('tabForm');
+  if (tabForm) {
+    tabForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = tabForm.querySelector('.submit-btn');
+      const btnText = tabForm.querySelector('.btn-text');
+      const spinner = tabForm.querySelector('.spinner');
+      const notification = document.getElementById('notification');
+      
+      // Show loading state
+      submitBtn.disabled = true;
+      btnText.textContent = 'Sending...';
+      spinner.classList.remove('hidden');
+      
+      try {
+        // Simulate API call (replace with actual submission)
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Show success notification
+        notification.classList.add('show');
+        
+        // Reset form
+        tabForm.reset();
+        
+        // Hide notification after 5 seconds
+        setTimeout(() => {
+          notification.classList.remove('show');
+        }, 5000);
+        
+      } catch (error) {
+        console.error('Error submitting form:', error);
+        alert('There was an error submitting your form. Please try again.');
+      } finally {
+        // Reset button state
+        submitBtn.disabled = false;
+        btnText.textContent = 'Submit for Review';
+        spinner.classList.add('hidden');
+      }
+    });
+  }
+  
+  // Course form submission
+  const courseForm = document.getElementById('courseForm');
+  if (courseForm) {
+    courseForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const submitBtn = courseForm.querySelector('.submit-btn');
+      const btnText = courseForm.querySelector('.btn-text');
+      const spinner = courseForm.querySelector('.spinner');
+      const notification = document.getElementById('courseNotification');
+      
+      // Show loading state
+      submitBtn.disabled = true;
+      btnText.textContent = 'Sending...';
+      spinner.classList.remove('hidden');
+      
+      try {
+        // Simulate API call (replace with actual submission)
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Show success notification
+        notification.classList.add('show');
+        
+        // Reset form
+        courseForm.reset();
+        
+        // Hide notification after 5 seconds
+        setTimeout(() => {
+          notification.classList.remove('show');
+        }, 5000);
+        
+      } catch (error) {
+        console.error('Error submitting course:', error);
+        alert('There was an error submitting your course. Please try again.');
+      } finally {
+        // Reset button state
+        submitBtn.disabled = false;
+        btnText.textContent = 'Submit for Review';
+        spinner.classList.add('hidden');
+      }
+    });
+  }
 }
 
 // ========== COURSES PAGE ==========

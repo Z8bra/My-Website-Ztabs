@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Pending Submissions</title>
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --light-bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --border-color: #e0e0e0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--light-bg);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin: 20px 0 30px;
+            font-size: 2.2rem;
+            font-weight: 600;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        h1:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(74, 111, 165, 0.25);
+            outline: none;
+        }
+        
+        .submission {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .submission:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+        .submission h3 {
+            margin: 0 0 15px 0;
+            color: var(--primary-color);
+            font-size: 1.4rem;
+            font-weight: 600;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .submission-meta {
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+            margin: 0 0 15px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .submission-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .submission-meta i {
+            color: var(--primary-color);
+            font-size: 1rem;
+        }
+        .submission-content {
+            background: var(--light-bg);
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            white-space: pre-wrap;
+            font-family: 'Courier New', Courier, monospace;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            line-height: 1.5;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 100px;
+        }
+        
+        .btn i {
+            font-size: 1rem;
+        }
+        .btn-approve {
+            background-color: var(--success-color);
+            color: white;
+        }
+        .btn-reject {
+            background-color: var(--danger-color);
+            color: white;
+        }
+        .btn-approve:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .btn-reject:hover {
+            background-color: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        .video-preview {
+            width: 100%;
+            max-width: 600px;
+            margin: 15px 0;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: block;
+        }
+        
+        .tab-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            border: 1px solid #e9ecef;
+            line-height: 1.6;
+        }
+        
+        .tab-info .chord {
+            color: #d63384;
+            font-weight: bold;
+            position: relative;
+            top: -0.5em;
+            font-size: 0.8em;
+        }
+        
+        .tab-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 10px 0;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .tab-meta span {
+            background: #e9ecef;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            color: #495057;
+        }
+        
+        .no-submissions {
+            text-align: center;
+            color: #6c757d;
+            font-size: 1.1rem;
+            padding: 40px 20px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .submission {
+                padding: 15px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+        .no-submissions {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 40px 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .tab-info {
+            background: #e8f5e9;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .tab-meta {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+            color: #2e7d32;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <h1>Admin Dashboard</h1>
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search submissions...">
+            <button id="refreshBtn" class="btn btn-primary">
+                <i class="refresh-icon">↻</i> Refresh
+            </button>
+        </div>
+    </div>
+    
+    <div id="submissions-container">
+        <div class="no-submissions">Loading submissions...</div>
+    </div>
+
+    <!-- Add Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <script>
+        // Make updateAdminPanel available globally
+        window.updateAdminPanel = loadSubmissions;
+        
+        // Load submissions when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSubmissions();
+            
+            // Initialize search functionality
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    filterSubmissions(e.target.value.toLowerCase());
+                });
+            }
+            
+            // Initialize refresh button
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', () => {
+                    loadSubmissions();
+                });
+            }
+            
+            // Show admin link in menu
+            const adminLinks = document.querySelectorAll('.admin-link');
+            adminLinks.forEach(link => {
+                link.style.display = 'block';
+            });
+        });
+        
+        // Filter submissions based on search query
+        function filterSubmissions(query) {
+            const submissions = document.querySelectorAll('.submission');
+            let hasResults = false;
+            
+            submissions.forEach(submission => {
+                const text = submission.textContent.toLowerCase();
+                const isVisible = text.includes(query);
+                submission.style.display = isVisible ? 'block' : 'none';
+                if (isVisible) hasResults = true;
+            });
+            
+            const noResults = document.getElementById('no-results');
+            if (!hasResults && submissions.length > 0) {
+                if (!noResults) {
+                    const container = document.getElementById('submissions-container');
+                    const message = document.createElement('div');
+                    message.id = 'no-results';
+                    message.className = 'no-submissions';
+                    message.textContent = 'No submissions match your search.';
+                    container.appendChild(message);
+                }
+            } else if (noResults) {
+                noResults.remove();
+            }
+        }
+
+        function loadSubmissions() {
+            const container = document.getElementById('submissions-container');
+            const loadingMessage = container.querySelector('.no-submissions') || 
+                                 document.createElement('div');
+            
+            loadingMessage.className = 'no-submissions';
+            loadingMessage.textContent = 'Loading submissions...';
+            container.innerHTML = '';
+            container.appendChild(loadingMessage);
+            
+            try {
+                // Small delay to show loading state
+                setTimeout(() => {
+                    const submissions = JSON.parse(localStorage.getItem('pendingSubmissions') || '[]');
+                    
+                    if (submissions.length === 0) {
+                        container.innerHTML = `
+                            <div class="no-submissions">
+                                <i class="fas fa-inbox" style="font-size: 2rem; margin-bottom: 10px; opacity: 0.7;"></i>
+                                <div>No pending submissions.</div>
+                                <div style="margin-top: 10px; font-size: 0.9rem;">
+                                    New submissions will appear here when users submit tabs or courses.
+                                </div>
+                            </div>`;
+                        return;
+                    }
+
+                container.innerHTML = '';
+                
+                submissions.forEach((submission) => {
+                    const submissionEl = document.createElement('div');
+                    submissionEl.className = 'submission';
+                    submissionEl.id = `submission-${submission.id}`;
+                    
+                    let content = '';
+                    
+                    if (submission.type === 'tab') {
+                        content = `
+                            <h3><i class="fas fa-music"></i> New Tab: ${escapeHtml(submission.title || 'Untitled Tab')}</h3>
+                            <div class="submission-meta">
+                                <span><i class="fas fa-user"></i> ${escapeHtml(submission.email || 'Anonymous')}</span>
+                                <span><i class="fas fa-user-tie"></i> ${escapeHtml(submission.artist || 'Not specified')}</span>
+                                <span><i class="far fa-clock"></i> ${new Date(submission.submittedAt).toLocaleString()}</span>
+                            </div>
+                            <div class="tab-meta">
+                                <span><i class="fas fa-guitar"></i> Capo: ${escapeHtml(submission.capo || 'None')}</span>
+                                ${submission.chords ? `<span><i class="fas fa-guitar"></i> Chords: ${escapeHtml(submission.chords)}</span>` : ''}
+                            </div>
+                            <div class="tab-info">${formatTabContent(submission.content || '')}</div>
+                        `;
+                    } else if (submission.type === 'course') {
+                        content = `
+                            <h3><i class="fas fa-video"></i> New Course: ${escapeHtml(submission.title || 'Untitled Course')}</h3>
+                            <div class="submission-meta">
+                                <span><i class="fas fa-user"></i> ${escapeHtml(submission.email || 'Anonymous')}</span>
+                                <span><i class="fas fa-chalkboard-teacher"></i> ${escapeHtml(submission.instructor || 'Not specified')}</span>
+                                <span><i class="far fa-clock"></i> ${new Date(submission.submittedAt).toLocaleString()}</span>
+                            </div>
+                            ${submission.tabId ? `<div class="tab-meta"><i class="fas fa-link"></i> Linked Tab ID: ${escapeHtml(submission.tabId)}</div>` : ''}
+                            ${submission.videoData ? `
+                                <div style="margin: 15px 0;">
+                                    <div><i class="fas fa-film"></i> Video Preview:</div>
+                                    <video class="video-preview" controls>
+                                        <source src="${escapeHtml(submission.videoData)}" type="video/webm">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </div>
+                            ` : ''}
+                        `;
+                    }
+                    
+                    submissionEl.innerHTML = `
+                        ${content}
+                        <div class="action-buttons">
+                            <button class="btn btn-approve" onclick="handleAction('${submission.id}', 'approve')">
+                                <i class="fas fa-check"></i> Approve
+                            </button>
+                            <button class="btn btn-reject" onclick="handleAction('${submission.id}', 'reject')">
+                                <i class="fas fa-times"></i> Reject
+                            </button>
+                        </div>
+                    `;
+                    
+                    container.appendChild(submissionEl);
+                }, 100); // End of setTimeout for loading delay
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+                container.innerHTML = `
+                    <div class="no-submissions">
+                        <i class="fas fa-exclamation-triangle" style="color: #dc3545; font-size: 2rem; margin-bottom: 15px;"></i>
+                        <div>Error loading submissions</div>
+                        <div style="margin-top: 10px; font-size: 0.9rem; color: #dc3545;">
+                            ${error.message || 'Please check the console for details.'}
+                        </div>
+                    </div>`;
+            }
+        }
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return '';
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function formatTabContent(content) {
+            if (!content) return '';
+            // Preserve line breaks and format chords
+            return content
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\[([^\]]+)\]/g, '<span class="chord" style="color: #d63384; font-weight: bold;">$1</span>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function handleAction(submissionId, action) {
+            if (!confirm(`Are you sure you want to ${action} this submission?`)) {
+                return;
+            }
+            
+            try {
+                const submissions = JSON.parse(localStorage.getItem('pendingSubmissions') || '[]');
+                const submissionIndex = submissions.findIndex(s => s.id === submissionId);
+                
+                if (submissionIndex === -1) {
+                    showNotification('Submission not found!', 'error');
+                    return;
+                }
+                
+                const submission = submissions[submissionIndex];
+            
+                if (action === 'approve') {
+                    // Move to approved submissions
+                    const approved = JSON.parse(localStorage.getItem('approvedSubmissions') || '[]');
+                    submission.status = 'approved';
+                    submission.approvedAt = new Date().toISOString();
+                    approved.push(submission);
+                    localStorage.setItem('approvedSubmissions', JSON.stringify(approved));
+                    
+                    // Show success notification
+                    showNotification('Submission approved successfully!', 'success');
+                    
+                    // Add to main content (tabs or courses)
+                    if (submission.type === 'tab') {
+                        const tabs = JSON.parse(localStorage.getItem('tabs') || '[]');
+                        tabs.push({
+                            id: submission.id,
+                            title: submission.title,
+                            artist: submission.artist,
+                            content: submission.content,
+                            capo: submission.capo,
+                            tuning: submission.tuning,
+                            chords: submission.chords,
+                            createdAt: new Date().toISOString()
+                        });
+                        localStorage.setItem('tabs', JSON.stringify(tabs));
+                    } else if (submission.type === 'course') {
+                        const courses = JSON.parse(localStorage.getItem('courses') || '[]');
+                        courses.push({
+                            id: submission.id,
+                            title: submission.title,
+                            instructor: submission.instructor,
+                            tabId: submission.tabId,
+                            videoData: submission.videoData,
+                            createdAt: new Date().toISOString()
+                        });
+                        localStorage.setItem('courses', JSON.stringify(courses));
+                    }
+                    
+                    // Remove from pending
+                    submissions.splice(submissionIndex, 1);
+                    localStorage.setItem('pendingSubmissions', JSON.stringify(submissions));
+                    
+                    // Update UI
+                    document.getElementById(`submission-${submissionId}`).remove();
+                    if (submissions.length === 0) {
+                        document.getElementById('submissions-container').innerHTML = 
+                            '<div class="no-submissions">No pending submissions.</div>';
+                    }
+                    
+                    alert('Submission approved and published!');
+                    
+                } else if (action === 'reject') {
+                    // Just remove from pending
+                    submissions.splice(submissionIndex, 1);
+                    localStorage.setItem('pendingSubmissions', JSON.stringify(submissions));
+                    
+                    // Update UI
+                    document.getElementById(`submission-${submissionId}`).remove();
+                    if (submissions.length === 0) {
+                        document.getElementById('submissions-container').innerHTML = 
+                            '<div class="no-submissions">No pending submissions.</div>';
+                    }
+                        content: submission.content,
+                        capo: submission.capo,
+                        chords: submission.chords,
+                        views: 0,
+                        likes: 0,
+                        createdAt: new Date().toISOString()
+                    });
+                    localStorage.setItem('tabs', JSON.stringify(tabs));
+                } else if (submission.type === 'course') {
+                    const courses = JSON.parse(localStorage.getItem('courses') || '[]');
+                    courses.push({
+                        id: submission.id,
+                        title: submission.title,
+                        instructor: submission.instructor,
+                        tabId: submission.tabId,
+                        videoData: submission.videoData,
+                        createdAt: new Date().toISOString()
+                    });
+                    localStorage.setItem('courses', JSON.stringify(courses));
+                }
+                if (submission.type === 'tab') {
+                    const tabs = JSON.parse(localStorage.getItem('tabs') || '[]');
+                    tabs.push({
+                        id: submission.id,
+                        title: submission.title,
+                        artist: submission.artist,
+                        content: submission.content,
+                        capo: submission.capo,
+                        tuning: submission.tuning,
+                        chords: submission.chords,
+                        createdAt: new Date().toISOString()
+                    });
+                    localStorage.setItem('tabs', JSON.stringify(tabs));
+                } else if (submission.type === 'course') {
+                    const courses = JSON.parse(localStorage.getItem('courses') || '[]');
+                    courses.push({
+                        id: submission.id,
+                        title: submission.title,
+                        instructor: submission.instructor,
+                        tabId: submission.tabId,
+                        videoData: submission.videoData,
+                        createdAt: new Date().toISOString()
+                    });
+                    localStorage.setItem('courses', JSON.stringify(courses));
+                }
+                
+                // Remove from pending
+                submissions.splice(submissionIndex, 1);
+                localStorage.setItem('pendingSubmissions', JSON.stringify(submissions));
+                
+                // Update UI
+                document.getElementById(`submission-${submissionId}`).remove();
+                if (submissions.length === 0) {
+                    document.getElementById('submissions-container').innerHTML = 
+                        '<div class="no-submissions">No pending submissions.</div>';
+                }
+                
+                alert('Submission approved and published!');
+                
+            } else if (action === 'reject') {
+                // Just remove from pending
+                submissions.splice(submissionIndex, 1);
+                localStorage.setItem('pendingSubmissions', JSON.stringify(submissions));
+                
+                // Update UI
+                document.getElementById(`submission-${submissionId}`).remove();
+                if (submissions.length === 0) {
+                    document.getElementById('submissions-container').innerHTML = 
+                        '<div class="no-submissions">No pending submissions.</div>';
+                }
+                
+      // Show admin link in menu when on admin page
+      document.addEventListener('DOMContentLoaded', () => {
+        // Show the admin link in the menu
+        const adminLinks = document.querySelectorAll('.admin-link');
+        adminLinks.forEach(link => {
+          link.style.display = 'block';
+        });
+        
+        // If there's a search input, focus it
+        const searchInput = document.querySelector('.search-input');
+        if (searchInput) {
+          searchInput.addEventListener('keyup', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const submissions = document.querySelectorAll('.submission');
+            
+            submissions.forEach(submission => {
+              const text = submission.textContent.toLowerCase();
+              submission.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+          });
+        }
+      });
+    </script>
+</body>
+</html>

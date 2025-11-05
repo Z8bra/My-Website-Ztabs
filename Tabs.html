@@ -21,6 +21,7 @@
           <a href="Tabs.html">Tabs</a>
           <a href="Playlist.html">Playlists</a>
           <a href="Courses.html">Courses</a>
+          <a href="admin.html" class="admin-link">Admin</a>
         </div>
       </div>
     </div>
@@ -47,21 +48,40 @@
       <div class="right-pane">
         <section class="creator-inline hidden" id="creatorInline">
           <form id="tabForm">
-            <label>Song Title</label>
-            <input type="text" id="title" placeholder="Enter song title">
-
-            <label>Capo Fret</label>
-            <input type="number" id="capo" placeholder="0" min="0">
-
-            <label>Tuning</label>
-            <input type="text" id="tuning" placeholder="Standard EADGBE">
-
-            <label>Chords</label>
-            <input type="text" id="chords" placeholder="e.g., G, D, Em, C">
-
-            <label>Lyrics</label>
-            <textarea id="lyrics" placeholder="Enter lyrics here"></textarea>
-            <button type="submit">Save Tab</button>
+            <div class="form-group">
+              <label>Song Title</label>
+              <input type="text" id="title" placeholder="Enter song title" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Artist</label>
+              <input type="text" id="artist" placeholder="Enter artist name" required>
+            </div>
+            
+            <div class="form-group">
+              <label>Capo Fret</label>
+              <input type="number" id="capo" placeholder="0" min="0">
+            </div>
+            
+            <div class="form-group">
+              <label>Chords Used</label>
+              <input type="text" id="chords" placeholder="C, G, Am, F, etc." required>
+            </div>
+            
+            <div class="form-group">
+              <label>Lyrics & Chords</label>
+              <textarea id="content" placeholder="Enter song lyrics with chords (e.g., [C]Some lyrics [G]here...)" required></textarea>
+            </div>
+            
+            <div class="form-actions">
+              <button type="submit" class="submit-btn">
+                <span class="btn-text">Submit for Review</span>
+                <span class="spinner hidden">⌛</span>
+              </button>
+            </div>
+            
+            <!-- Hidden email field still required for submission -->
+            <input type="email" id="email" value="admin@example.com" style="display: none;">
           </form>
         </section>
         <div id="tabContent" class="tab-content"></div>
@@ -69,7 +89,7 @@
     </div>
   </main>
 
-  <footer>© 2025 Z Tabs</footer>
+  <footer> 2025 Z Tabs</footer>
   <script src="script.js"></script>
 </body>
 </html>
