@@ -47,7 +47,7 @@
       </div>
       <div class="right-pane">
         <section class="creator-inline hidden" id="creatorInline">
-          <form id="tabForm">
+          <form id="tabForm" onsubmit="event.preventDefault(); return false;">
             <div class="form-group">
               <label>Song Title</label>
               <input type="text" id="title" placeholder="Enter song title" required>
@@ -84,12 +84,13 @@
             <input type="email" id="email" value="admin@example.com" style="display: none;">
           </form>
         </section>
-        <div id="tabContent" class="tab-content"></div>
+        <div id="tabContent" class="tab-content" contenteditable="true" placeholder="Enter your tab here..."></div>
       </div>
     </div>
   </main>
 
   <footer> 2025 Z Tabs</footer>
+  <script src="submission-handler.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

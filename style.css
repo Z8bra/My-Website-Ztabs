@@ -1028,8 +1028,32 @@ footer {
   margin-right: auto;
 }
 
-.recorder {
-  position: relative;
+.recorder-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin: 1rem 0;
+  width: 100%;
+  max-width: 375px;
+  margin: 0 auto;
+}
+
+.recorder-container .shorts-video {
+  width: 100%;
+  max-width: 300px;
+  height: 500px;
+  background: #000;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.rec-controls {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 1rem;
 }
 
 .rec-controls {
@@ -1049,14 +1073,54 @@ footer {
 }
 
 .record-btn {
-  width: 64px;
-  height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  background: #e8e8e8;
-  border: 4px solid #cfcfcf;
-  box-shadow: inset 0 3px 8px rgba(0,0,0,0.15), 0 6px 14px rgba(0,0,0,0.12);
-  position: relative;
+  background: #ff4444;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
   padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.record-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+.record-btn.recording {
+  background: #ff0000;
+  animation: pulse 1.5s infinite;
+}
+
+.record-icon {
+  display: block;
+  width: 30px;
+  height: 30px;
+  background: white;
+  border-radius: 50%;
+  margin-bottom: 4px;
+  transition: all 0.3s ease;
+}
+
+.record-text {
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-top: 4px;
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+  70% { box-shadow: 0 0 0 15px rgba(255, 0, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
 }
 
 .record-btn::after {

@@ -23,16 +23,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   // Helper function to store submission
-  function storeSubmission(submission) {
+  function storeSubmission(formData, type) {
     try {
       const submissions = JSON.parse(localStorage.getItem('pendingSubmissions') || '[]');
-      submissions.push(submission);
+      const id = 'pending_' + Date.now();
+      const submission = {
+        id: id,
+        type: type,
+        data: formData,
+        createdAt: new Date().toISOString(),
+        status: 'pending'
+      };
+      
+      submissions.unshift(submission);
       localStorage.setItem('pendingSubmissions', JSON.stringify(submissions));
-      console.log('Submission stored:', submission);
-      return true;
+      
+      // Redirect to view the new submission
+      setTimeout(() => {
+        window.location.href = `tab-details.html?id=${id}`;
+      }, 500);
+      
+      return { success: true, id: id };
     } catch (error) {
       console.error('Error storing submission:', error);
-      return false;
+      return { success: false, error: error.message };
     }
   }
   
@@ -71,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
           content: content,
           chords: chords,
           capo: capo,
-          email: 'submission@example.com', // Default email since field is hidden
+          // Remove email requirement
           timestamp: new Date().toISOString(),
           views: 0,
           likes: 0
@@ -84,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (stored) {
           // Show success message
-          showSuccess('Your tab has been submitted for review! It will appear after approval.');
+          alert('Your tab has been submitted for review! It will appear after approval.');
           tabForm.reset();
           
           // Update the admin panel if it's open
@@ -96,6 +110,11 @@ document.addEventListener('DOMContentLoaded', () => {
           if (window.loadTabs) {
             window.loadTabs();
           }
+          
+          // Hide the form after successful submission
+          const creatorInline = document.getElementById('creatorInline');
+          if (creatorInline) creatorInline.classList.add('hidden');
+          
         } else {
           throw new Error('Failed to store submission');
         }
@@ -126,33 +145,20 @@ document.addEventListener('DOMContentLoaded', () => {
       spinner.classList.remove('hidden');
       
       try {
-        // Get the video blob if available
+        // Get form values
+        const title = courseForm.querySelector('#title')?.value || 'Untitled Course';
+        const instructor = courseForm.querySelector('#instructor')?.value || 'Anonymous';
+        
+        if (!title || !instructor) {
+          throw new Error('Please fill in all required fields');
+        }
+        
+        // Get video data if available
         let videoData = null;
         const videoElement = courseForm.querySelector('video');
-        if (videoElement && videoElement.srcObject) {
-          try {
-            const stream = videoElement.srcObject;
-            const recorder = new MediaRecorder(stream);
-            const chunks = [];
-            
-            videoData = await new Promise((resolve) => {
-              recorder.ondataavailable = (e) => chunks.push(e.data);
-              recorder.onstop = () => {
-                const blob = new Blob(chunks, { type: 'video/webm' });
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.readAsDataURL(blob);
-              };
-              recorder.start();
-              setTimeout(() => {
-                recorder.stop();
-                stream.getTracks().forEach(track => track.stop());
-              }, 1000); // Capture 1 second of video
-            });
-          } catch (error) {
-            console.error('Error capturing video:', error);
-            // Continue without video if there's an error
-          }
+        if (videoElement && videoElement.src) {
+          // If we already have a recorded video, use it
+          videoData = videoElement.src;
         }
         
         const formData = {
@@ -160,40 +166,61 @@ document.addEventListener('DOMContentLoaded', () => {
           type: 'course',
           status: 'pending',
           submittedAt: new Date().toISOString(),
-          title: courseForm.querySelector('#courseTitle')?.value || 'Untitled Course',
-          instructor: courseForm.querySelector('#courseAuthor').value,
-          email: courseForm.querySelector('#courseEmail').value,
-          tabId: courseForm.querySelector('#courseTabSelect').value,
+          title: title,
+          instructor: instructor,
           videoData: videoData,
           timestamp: new Date().toISOString()
         };
         
+        console.log('Submitting course:', formData);
+        
         // Store the course submission
-        storeSubmission(formData);
+        const stored = storeSubmission(formData);
         
-        // Show success message
-        showSuccess('Your course has been submitted for review! It will appear after approval.');
-        courseForm.reset();
+        if (stored) {
+          // Show success message
+          alert('Your course has been submitted for review! It will appear after approval.');
+          courseForm.reset();
+          
+          // Update the admin panel if it's open
+          if (window.updateAdminPanel) {
+            window.updateAdminPanel();
+          }
+          
+          // Hide the form after successful submission
+          const creatorInline = document.querySelector('.creator-inline');
+          if (creatorInline) creatorInline.classList.add('hidden');
+          
+        } else {
+          throw new Error('Failed to store submission');
+        }
         
-        // Reset video element
+      } catch (error) {
+        console.error('Error submitting course:', error);
+        alert(error.message || 'There was an error submitting your course. Please try again.');
+      } catch (error) {
+        console.error('Error submitting course:', error);
+        alert(error.message || 'There was an error submitting your course. Please try again.');
+      } finally {
+        // Clean up video element
         const videoElement = courseForm.querySelector('video');
         if (videoElement) {
-          videoElement.srcObject = null;
+          if (videoElement.srcObject) {
+            videoElement.srcObject.getTracks().forEach(track => track.stop());
+            videoElement.srcObject = null;
+          }
           videoElement.src = '';
         }
+        
+        // Reset UI state
+        submitBtn.disabled = false;
+        btnText.textContent = 'Submit for Review';
+        spinner.classList.add('hidden');
         
         // Update the admin panel if it's open
         if (window.updateAdminPanel) {
           window.updateAdminPanel();
         }
-        
-      } catch (error) {
-        console.error('Error submitting course:', error);
-        alert('There was an error submitting your course. Please try again.');
-      } finally {
-        submitBtn.disabled = false;
-        btnText.textContent = 'Submit for Review';
-        spinner.classList.add('hidden');
       }
     });
   }

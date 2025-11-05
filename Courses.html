@@ -36,27 +36,24 @@
     <button id="createCourseToggle" class="create-tab-btn">Create Course</button>
 
     <section class="creator-inline hidden" id="courseCreator">
-      <form id="courseForm">
+      <form id="courseForm" onsubmit="event.preventDefault(); return false;">
         <div class="form-group">
-          <label>Your Name</label>
-          <input type="text" id="courseAuthor" placeholder="e.g., Alex R." required>
-        </div>
-        
-        <div class="form-group">
-          <label>Your Email</label>
-          <input type="email" id="courseEmail" placeholder="Enter your email" required>
+          <label for="instructor">Your Name</label>
+          <input type="text" id="instructor" placeholder="Enter your name" required>
         </div>
 
-        <div class="form-group">
-          <label>Select Tab</label>
-          <select id="courseTabSelect" required></select>
-        </div>
-
-        <div class="form-group">
-          <div class="recorder">
-            <video id="coursePreview" autoplay muted playsinline class="shorts-video"></video>
-            <div class="rec-controls">
-              <button type="button" id="recToggle" class="record-btn" aria-label="Record"></button>
+        <div class="form-group" style="position: relative; width: 100%; max-width: 300px; margin: 0 auto;">
+          <div class="recorder-container">
+            <div class="video-preview-wrapper">
+              <video id="videoPreview" class="video-preview" autoplay muted></video>
+              <button type="button" id="startRecording" class="record-button">
+                <i class="fas fa-circle"></i>
+              </button>
+            </div>
+            <div class="video-controls">
+              <button type="button" id="stopRecording" class="btn btn-stop" disabled>
+                <i class="fas fa-stop"></i> Stop Recording
+              </button>
             </div>
           </div>
         </div>
@@ -108,7 +105,7 @@
     })();
   </script>
   
-  <script src="script.js"></script>
   <script src="submission-handler.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
