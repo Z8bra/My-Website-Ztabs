@@ -568,6 +568,7 @@ function renderTabs() {
       const showCoursesBtnId = `showCourses-${tab.id || 'x'}`;
       const controlsId = `controls-${tab.id || 'x'}`;
       const chordsBlockId = `chords-${tab.id || 'x'}`;
+      const adminControlsId = `admin-controls-${tab.id || 'x'}`;
       tabContent.innerHTML = `
         <div class="view-toggle">
           <button id="${showTabBtnId}" class="toggle-btn active">Tab</button>
@@ -593,6 +594,15 @@ function renderTabs() {
           <div class="tab-meta" style="margin: 8px 0 12px; display:flex; gap:8px; align-items:center;">
             <span id="${viewsId}">${meta.views} views</span>
             <button id="${likeId}" ${meta.liked ? 'disabled' : ''}>❤ Like (${meta.likes || 0})</button>
+          </div>
+          <!-- Admin Controls -->
+          <div id="${adminControlsId}" class="admin-controls" style="margin-top: 20px; display: flex; gap: 10px;">
+            <button class="btn-approve" data-tab-id="${tab.id}">
+              <i class="fas fa-check"></i> Approve
+            </button>
+            <button class="btn-reject" data-tab-id="${tab.id}">
+              <i class="fas fa-times"></i> Reject
+            </button>
           </div>
         </div>
         <div id="${coursesViewId}" class="hidden"></div>
@@ -1042,10 +1052,53 @@ function renderPlaylistList() {
   });
 }
 
+// ========== AUTHENTICATION HELPERS ==========
+function checkAuth() {
+  const isAuth = localStorage.getItem('isAuthenticated') === 'true';
+  const isAdmin = localStorage.getItem('isAdmin') === 'true';
+  
+  // Update UI based on auth state
+  const signinLinks = document.querySelectorAll('#signinLink');
+  const signoutLinks = document.querySelectorAll('#signoutLink');
+  const authElements = document.querySelectorAll('[data-auth]');
+  const adminElements = document.querySelectorAll('[data-admin]');
+  
+  signinLinks.forEach(link => {
+    link.style.display = isAuth ? 'none' : 'inline-block';
+  });
+  
+  signoutLinks.forEach(link => {
+    link.style.display = isAuth ? 'inline-block' : 'none';
+  });
+  
+  authElements.forEach(el => {
+    el.style.display = isAuth ? 'inline-block' : 'none';
+  });
+  
+  adminElements.forEach(el => {
+    el.style.display = (isAuth && isAdmin) ? 'inline-block' : 'none';
+  });
+  
+  return { isAuth, isAdmin };
+}
+
+// Protect admin routes
+function protectAdminRoute() {
+  const { isAuth, isAdmin } = checkAuth();
+  if (!isAuth || !isAdmin) {
+    window.location.href = 'signin.html';
+    return false;
+  }
+  return true;
+}
+
 // ========== PAGE ROUTING ==========
 document.addEventListener("DOMContentLoaded", () => {
   // Run one-time reset if requested before any rendering
   resetAllStateIfRequested();
+  
+  // Check authentication state on page load
+  checkAuth();
   renderTabs();
   renderIndexTabs();
   setupCreator();
@@ -1188,8 +1241,32 @@ function setupCoursesPage() {
     courses.forEach(c => {
       const url = URL.createObjectURL(c.videoBlob);
       const card = document.createElement('div');
+      card.className = 'course-card';
+      
+      // Create admin controls
+      const adminControls = document.createElement('div');
+      adminControls.className = 'admin-controls';
+      adminControls.style.display = 'flex';
+      adminControls.style.gap = '10px';
+      adminControls.style.marginTop = '10px';
+      adminControls.style.justifyContent = 'center';
+      
+      const approveBtn = document.createElement('button');
+      approveBtn.className = 'btn-approve';
+      approveBtn.textContent = 'Approve';
+      approveBtn.dataset.courseId = c.id;
+      
+      const rejectBtn = document.createElement('button');
+      rejectBtn.className = 'btn-reject';
+      rejectBtn.textContent = 'Reject';
+      rejectBtn.dataset.courseId = c.id;
+      
+      adminControls.appendChild(approveBtn);
+      adminControls.appendChild(rejectBtn);
+      
       const caption = document.createElement('div');
       caption.textContent = `${c.authorName || 'Creator'} • ${c.views || 0} views`;
+      
       const vid = document.createElement('video');
       vid.className = 'shorts-video';
       vid.controls = true;
@@ -1208,9 +1285,83 @@ function setupCoursesPage() {
       });
       card.appendChild(vid);
       card.appendChild(caption);
+      card.appendChild(adminControls);
       gallery.appendChild(card);
     });
   }
 
-  renderCoursesGallery();
+// Handle approval/rejection for both tabs and courses
+document.addEventListener('click', async (e) => {
+  const approveBtn = e.target.closest('.btn-approve');
+  const rejectBtn = e.target.closest('.btn-reject');
+  
+  if (!approveBtn && !rejectBtn) return;
+  
+  e.preventDefault();
+  
+  // Handle course approval/rejection
+  if ((approveBtn && approveBtn.dataset.courseId) || (rejectBtn && rejectBtn.dataset.courseId)) {
+    const courseId = (approveBtn || rejectBtn).dataset.courseId;
+    
+    if (approveBtn) {
+      // For approval, hide the controls
+      const card = approveBtn.closest('.course-card');
+      if (card) {
+        const controls = card.querySelector('.admin-controls');
+        if (controls) controls.style.display = 'none';
+      }
+      alert('Course approved!');
+    } else if (rejectBtn) {
+      // For rejection, remove the course from IndexedDB
+      try {
+        const db = await openCoursesDb();
+        const tx = db.transaction('courses', 'readwrite');
+        const store = tx.objectStore('courses');
+        await store.delete(courseId);
+        
+        // Remove from UI
+        const card = rejectBtn.closest('.course-card');
+        if (card) card.remove();
+        
+        alert('Course permanently removed.');
+      } catch (error) {
+        console.error('Error removing course:', error);
+        alert('Error removing course. Please try again.');
+      }
+    }
+    return;
+  }
+  
+  // Handle tab approval/rejection
+  if ((approveBtn && approveBtn.dataset.tabId) || (rejectBtn && rejectBtn.dataset.tabId)) {
+    const tabId = (approveBtn || rejectBtn).dataset.tabId;
+    const tabs = getTabs();
+    const tabIndex = tabs.findIndex(t => t.id === tabId);
+    
+    if (tabIndex === -1) return;
+    
+    if (approveBtn) {
+      // For approval, hide the controls
+      const controls = approveBtn.closest('.admin-controls');
+      if (controls) controls.style.display = 'none';
+      alert('Tab approved!');
+    } else if (rejectBtn) {
+      // For rejection, remove the tab permanently
+      tabs.splice(tabIndex, 1);
+      saveTabs(tabs);
+      
+      // Update UI
+      const tabContent = document.getElementById('tabContent');
+      if (tabContent) {
+        tabContent.innerHTML = '<p>Select a tab to see its content.</p>';
+      }
+      
+          // Re-render the tab list
+      renderTabs();
+      alert('Tab permanently removed.');
+    }
+  }
+});
+
+renderCoursesGallery();
 }

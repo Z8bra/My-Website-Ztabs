@@ -19,8 +19,10 @@
         <div class="dropdown-menu">
           <a href="index.html">Home</a>
           <a href="Tabs.html">Tabs</a>
-          <a href="Playlist.html">Playlists</a>
-          <a href="Courses.html">Courses</a>
+          <a href="Playlist.html" data-auth>Playlists</a>
+          <a href="Courses.html" data-auth>Courses</a>
+          <a href="signin.html" id="signinLink" style="display: none;">Sign In</a>
+          <a href="#" id="signoutLink" onclick="signOut(); return false;">Sign Out</a>
         </div>
       </div>
     </div>
@@ -61,6 +63,7 @@
   </main>
 
   <footer>© 2025 Z Tabs</footer>
+  <script src="auth.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

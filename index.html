@@ -19,8 +19,10 @@
         <div class="dropdown-menu">
           <a href="index.html">Home</a>
           <a href="Tabs.html">Tabs</a>
-          <a href="Playlist.html">Playlists</a>
-          <a href="Courses.html">Courses</a>
+          <a href="Playlist.html" data-auth style="display: none;">Playlists</a>
+          <a href="Courses.html" data-auth style="display: none;">Courses</a>
+          <a href="signin.html" id="signinLink">Sign In</a>
+          <a href="#" id="signoutLink" style="display: none;" onclick="signOut()">Sign Out</a>
         </div>
       </div>
     </div>
@@ -67,6 +69,7 @@
       </form>
     </div>
   </section>
-<script src="script.js"></script>
+  <script src="auth.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In - Z Tabs</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .signin-container {
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .signin-container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .form-group input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .btn-signin {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, var(--orange), var(--dark-orange));
+      color: white;
+      border: 1px solid rgba(255, 92, 0, 0.35);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(255, 123, 0, 0.2);
+    }
+    .btn-signin:hover {
+      background: white;
+      color: var(--dark-orange);
+      border-color: var(--dark-orange);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(255, 92, 0, 0.25);
+    }
+    .signup-link {
+      text-align: center;
+      margin-top: 15px;
+    }
+    .error-message {
+      color: red;
+      margin-top: 10px;
+      text-align: center;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Z Tabs</h1>
+    <div class="header-actions">
+      <input type="search" class="search-input" id="globalSearch" placeholder="Search tabs, playlists, courses..."/>
+      <div class="dropdown">
+        <button class="dropdown-toggle">Menu ▾</button>
+        <div class="dropdown-menu">
+          <a href="index.html">Home</a>
+          <a href="Tabs.html">Tabs</a>
+          <a href="Playlist.html" data-auth style="display: none;">Playlists</a>
+          <a href="Courses.html" data-auth style="display: none;">Courses</a>
+          <a href="signin.html" id="signinLink">Sign In</a>
+          <a href="#" id="signoutLink" style="display: none;" onclick="signOut()">Sign Out</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="signin-container">
+      <h2>Sign In</h2>
+      <form id="signinForm">
+        <div class="form-group">
+          <label for="username">Username or Email</label>
+          <input type="text" id="username" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" required>
+        </div>
+        <button type="submit" class="btn-signin">Sign In</button>
+        <div id="errorMessage" class="error-message">Invalid username or password</div>
+      </form>
+      <div class="signup-link">
+        Don't have an account? <a href="signup.html" id="signupLink">Sign up here</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>© 2025 Z Tabs</footer>
+  <script src="auth.js"></script>
+</body>
+</html>
