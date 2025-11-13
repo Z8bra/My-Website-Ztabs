@@ -682,6 +682,36 @@ function renderTabs() {
           coursesView.classList.add('hidden');
         });
         showCoursesBtn.addEventListener('click', async () => {
+          // Check if user is authenticated
+          const isAuth = localStorage.getItem('isAuthenticated') === 'true';
+          if (!isAuth) {
+            // Show sign-in prompt
+            const signInPrompt = document.createElement('div');
+            signInPrompt.className = 'signin-prompt';
+            signInPrompt.innerHTML = `
+              <div class="signin-prompt-content">
+                <h3>Sign In Required</h3>
+                <p>Please sign in to access the Courses section.</p>
+                <div class="signin-prompt-actions">
+                  <a href="signin.html" class="btn-signin">Sign In</a>
+                  <a href="signup.html" class="btn-signup">Create Account</a>
+                </div>
+              </div>
+            `;
+            document.body.appendChild(signInPrompt);
+            
+            // Close prompt when clicking outside
+            signInPrompt.addEventListener('click', (e) => {
+              if (e.target === signInPrompt) {
+                document.body.removeChild(signInPrompt);
+              }
+            });
+            
+            // Prevent default behavior
+            return;
+          }
+          
+          // User is authenticated, show courses
           showCoursesBtn.classList.add('active');
           showTabBtn.classList.remove('active');
           tabView.classList.add('hidden');
@@ -866,7 +896,10 @@ function setupPlaylistToggle() {
   const toggle = document.getElementById("createPlaylistToggle");
   const creator = document.getElementById("playlistCreator");
   if (!toggle || !creator) return;
-  toggle.addEventListener("click", () => {
+  
+  // Add click handler for the toggle button
+  toggle.addEventListener("click", (e) => {
+    e.preventDefault();
     creator.classList.toggle("hidden");
     if (!creator.classList.contains('hidden')) {
       populateTabChoices();
@@ -875,8 +908,58 @@ function setupPlaylistToggle() {
       if (rightPane) rightPane.innerHTML = '';
       const mount = document.getElementById('playlistList');
       if (mount) mount.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      // Focus on the playlist name input when opening the form
+      const nameInput = document.getElementById('playlistName');
+      if (nameInput) nameInput.focus();
     }
   });
+  
+  // Setup form submission
+  const form = document.getElementById('playlistForm');
+  if (form) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const nameInput = document.getElementById('playlistName');
+      const name = nameInput ? nameInput.value.trim() : '';
+      
+      if (!name) {
+        alert('Please enter a playlist name');
+        return;
+      }
+      
+      // Get selected tabs
+      const selectedTabs = [];
+      const checkboxes = form.querySelectorAll('input[type="checkbox"]:checked');
+      checkboxes.forEach(checkbox => {
+        selectedTabs.push(checkbox.value);
+      });
+      
+      if (selectedTabs.length === 0) {
+        alert('Please select at least one tab for the playlist');
+        return;
+      }
+      
+      // Create playlist
+      const playlists = getPlaylists();
+      playlists.push({
+        id: 'pl_' + Date.now(),
+        name: name,
+        tabIds: selectedTabs,
+        createdAt: new Date().toISOString()
+      });
+      
+      savePlaylists(playlists);
+      
+      // Reset form and update UI
+      form.reset();
+      creator.classList.add('hidden');
+      renderPlaylistList();
+      
+      // Show success message
+      alert(`Playlist "${name}" created successfully!`);
+    });
+  }
 }
 
 function populateTabChoices() {
